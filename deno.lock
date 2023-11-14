@@ -122,5 +122,8 @@
       }
     }
   },
-  "remote": {}
+  "remote": {
+    "https://deno.land/std@0.206.0/collections/group_by.ts": "f90f483598b38f0174f946589f3af25b1c3cf89d4f3b14d4f0fbe3aaaca0abdd",
+    "https://deno.land/std@0.206.0/collections/sum_of.ts": "76db7f04a66bdfa4911c4a592b868c854c690d6f0f83140c315f70caf742c761"
+  }
 }
