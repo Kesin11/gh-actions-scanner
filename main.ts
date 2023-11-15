@@ -19,7 +19,7 @@ const octokit = createOctokit();
 const res = await octokit.actions.listWorkflowRunsForRepo({
   owner,
   repo,
-  per_page: 10
+  per_page: 20 // gh run list もデフォルトでは20件表示
 })
 const runsSummary = res.data.workflow_runs.map((run) => {
   return {
