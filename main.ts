@@ -64,3 +64,11 @@ for (const workflowName of Object.keys(runsByWorkflow)) {
   const sumRunDurationMs = sumOf(runs, (run) => run.usage?.run_duration_ms ?? 0)
   console.log(`${workflowName}: ${sumRunDurationMs/1000}sec `)
 }
+
+console.log("----Actions active cache----")
+const activeCache = await octokit.actions.getActionsCacheUsage({ owner, repo})
+console.log(activeCache.data)
+console.log(`Active Cache size in bytes(GB): ${Math.round(activeCache.data.active_caches_size_in_bytes/1000/1000/1000)} / 10GB`)
+console.log("----Actions cache list (size top 10)----")
+const caches = await octokit.actions.getActionsCacheList({ owner, repo, sort: "size_in_bytes", per_page: 10 })
+console.log(caches.data)
