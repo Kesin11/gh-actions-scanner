@@ -5,5 +5,6 @@
   "deno.codeLens.referencesAllFunctions": true,
   "deno.codeLens.test": true,
   "editor.defaultFormatter": "denoland.vscode-deno",
-  "deno.cacheOnSave": true
+  "deno.cacheOnSave": true,
+  "editor.formatOnSave": true
 }
