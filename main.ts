@@ -1,6 +1,5 @@
-import { Octokit } from "npm:@octokit/rest";
-import { groupBy } from "https://deno.land/std@0.206.0/collections/group_by.ts";
-import { sumOf } from "https://deno.land/std@0.206.0/collections/sum_of.ts";
+import { Octokit } from "npm:@octokit/rest@20.0.2";
+import { sumOf } from "https://deno.land/std@0.212.0/collections/sum_of.ts";
 
 function createOctokit(): Octokit {
   const token = Deno.env.get("GITHUB_TOKEN");
@@ -61,7 +60,7 @@ if (retriedRuns.length !== 0) {
 }
 
 console.log("----Workflow count----");
-const runsByWorkflow = groupBy(runsSummary, (run) => run.name);
+const runsByWorkflow = Object.groupBy(runsSummary, (run) => run.name);
 for (const workflowName of Object.keys(runsByWorkflow)) {
   const runs = runsByWorkflow[workflowName]!;
   console.log(`${workflowName}: ${runs.length} runs`);
