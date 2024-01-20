@@ -1,4 +1,8 @@
-import { createOctokit, createRunsSummary } from "./src/github.ts";
+import {
+  createJobsSummary,
+  createOctokit,
+  createRunsSummary,
+} from "./src/github.ts";
 import { reportActiveCache, reportCacheList } from "./src/rules/cache.ts";
 import {
   reportWorkflowCount,
@@ -13,10 +17,13 @@ export const octokit = createOctokit();
 const runsSummary = await createRunsSummary(octokit, owner, repo);
 console.log("----runsSummary----");
 // console.debug(runsSummary);
+console.log("----jobsSummary----");
+const jobsSummary = await createJobsSummary(octokit, runsSummary);
+console.debug(jobsSummary);
 
 await reportWorkflowRetryRuns(runsSummary);
 await reportWorkflowCount(runsSummary);
 await reportWorkflowUsage(runsSummary);
 
-await reportActiveCache(octokit, owner, repo);
-await reportCacheList(octokit, owner, repo);
+// await reportActiveCache(octokit, owner, repo);
+// await reportCacheList(octokit, owner, repo);

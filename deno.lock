@@ -117,6 +117,8 @@
     }
   },
   "remote": {
+    "https://deno.land/std@0.212.0/collections/max_of.ts": "a56297ed49ee42eb948d348451c9158c9f7b8e4e1fc0259829e945924893ca07",
+    "https://deno.land/std@0.212.0/collections/min_of.ts": "a80b6881494f505fe42c160317225c99a69bf393419563063ac2dd258cffd9b2",
     "https://deno.land/std@0.212.0/collections/sum_of.ts": "a7617a77c2501a54dedf50bc4211ca6c06c9678eee00c31a63e187cc8f0b3b97"
   }
 }
