@@ -10,13 +10,12 @@ export async function reportActiveCache(
     owner,
     repo,
   });
-  console.log(activeCache.data);
+  // console.log(activeCache.data);
+  const activeCacheSize =
+    (activeCache.data.active_caches_size_in_bytes / 1000 / 1000 / 1000)
+      .toPrecision(2);
   console.log(
-    `Active Cache size in bytes(GB): ${
-      Math.round(
-        activeCache.data.active_caches_size_in_bytes / 1000 / 1000 / 1000,
-      )
-    } / 10GB`,
+    `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
   );
 }
 
@@ -25,12 +24,18 @@ export async function reportCacheList(
   owner: string,
   repo: string,
 ) {
-  console.log("----Actions cache list (size top 10)----");
+  console.log("----Actions cache list (size top 5)----");
   const caches = await octokit.actions.getActionsCacheList({
     owner,
     repo,
     sort: "size_in_bytes",
-    per_page: 10,
+    per_page: 5,
   });
-  console.log(caches.data);
+  console.debug(caches.data.actions_caches.map((cache) => {
+    return {
+      ref: cache.ref,
+      key: cache.key,
+      size_in_bytes: cache.size_in_bytes,
+    };
+  }));
 }

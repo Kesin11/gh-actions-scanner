@@ -12,7 +12,7 @@ export const octokit = createOctokit();
 
 const runsSummary = await createRunsSummary(octokit, owner, repo);
 console.log("----runsSummary----");
-console.dir(runsSummary, { depth: null });
+// console.debug(runsSummary);
 
 await reportWorkflowRetryRuns(runsSummary);
 await reportWorkflowCount(runsSummary);
