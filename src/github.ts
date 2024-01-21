@@ -65,11 +65,12 @@ export async function createRunsSummary(
   octokit: Octokit,
   owner: string,
   repo: string,
+  perPage: number,
 ): Promise<RunsSummary> {
   const res = await octokit.actions.listWorkflowRunsForRepo({
     owner,
     repo,
-    per_page: 20, // gh run list もデフォルトでは20件表示
+    per_page: perPage,
   });
   const runsSummary: RunsSummary = res.data.workflow_runs.map((run) => {
     return {
