@@ -1,6 +1,5 @@
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
-import { minOf } from "https://deno.land/std@0.212.0/collections/min_of.ts";
-import { maxOf } from "https://deno.land/std@0.212.0/collections/max_of.ts";
+import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
 
 export type Workflow =
   RestEndpointMethodTypes["actions"]["getWorkflowRunAttempt"]["response"][
@@ -62,8 +61,7 @@ export async function createRunsSummary(
   const res = await octokit.actions.listWorkflowRunsForRepo({
     owner,
     repo,
-    // per_page: 20, // gh run list もデフォルトでは20件表示
-    per_page: 10, // debu
+    per_page: 20, // gh run list もデフォルトでは20件表示
   });
   const runsSummary = res.data.workflow_runs.map((run) => {
     return {
@@ -132,12 +130,15 @@ export async function createJobsSummary(
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
     for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
       const successJobs = jobs.filter((job) => job.conclusion === "success");
+      const isJobsEmpty = successJobs.length === 0;
+      const durationSecs = successJobs.map((job) => job.durationSec);
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobName] = {
-        minDurationSec: minOf(successJobs, (job) => job.durationSec),
-        maxDurationSec: maxOf(successJobs, (job) => job.durationSec),
-        medianDurationSec: 0,
-        p90DurationSec: 0,
+        minDurationSec: isJobsEmpty ? undefined : min(durationSecs),
+        medianDurationSec: isJobsEmpty ? undefined : median(durationSecs),
+        p80DurationSec: isJobsEmpty ? undefined : quantile(durationSecs, 0.8),
+        p90DurationSec: isJobsEmpty ? undefined : quantile(durationSecs, 0.9),
+        maxDurationSec: isJobsEmpty ? undefined : max(durationSecs),
       };
     }
   }

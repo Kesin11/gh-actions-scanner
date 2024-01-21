@@ -2,7 +2,9 @@
   "version": "3",
   "packages": {
     "specifiers": {
-      "npm:@octokit/rest@20.0.2": "npm:@octokit/rest@20.0.2_@octokit+core@5.0.2"
+      "npm:@octokit/rest@20.0.2": "npm:@octokit/rest@20.0.2_@octokit+core@5.0.2",
+      "npm:simple-statistics@7.3.0": "npm:simple-statistics@7.3.0",
+      "npm:simple-statistics@7.8.3": "npm:simple-statistics@7.8.3"
     },
     "npm": {
       "@octokit/auth-token@4.0.0": {
@@ -105,6 +107,14 @@
         "dependencies": {
           "wrappy": "wrappy@1.0.2"
         }
+      },
+      "simple-statistics@7.3.0": {
+        "integrity": "sha512-eGZFLeolvspUYdGeDX7xN8eZONps4Os2W/l+7t7usgHTqc4M2sWIBx95hr4ZNlK6rQATypo8MfsORc/o56roQg==",
+        "dependencies": {}
+      },
+      "simple-statistics@7.8.3": {
+        "integrity": "sha512-JFvMY00t6SBGtwMuJ+nqgsx9ylkMiJ5JlK9bkj8AdvniIe5615wWQYkKHXe84XtSuc40G/tlrPu0A5/NlJvv8A==",
+        "dependencies": {}
       },
       "universal-user-agent@6.0.1": {
         "integrity": "sha512-yCzhz6FN2wU1NiiQRogkTQszlQSlpWaw8SvVegAc+bDxbzHgh1vX8uIe8OYyMH6DwH+sdTJsgMl36+mSMdRJIQ==",
