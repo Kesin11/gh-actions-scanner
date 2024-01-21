@@ -12,6 +12,9 @@ export type WorkflowJobs =
     "data"
   ]["jobs"];
 
+export type WorkflowRunUsage =
+  RestEndpointMethodTypes["actions"]["getWorkflowRunUsage"]["response"]["data"];
+
 function diffSec(
   start?: string | Date | null,
   end?: string | Date | null,
@@ -34,14 +37,7 @@ export type RunsSummary = {
   run_started_at: string | undefined;
   owner: string;
   repo: string;
-  usage: { // TODO: 特に適当すぎるので後で治す
-    billable: {
-      UBUNTU: {
-        total_ms: number;
-      };
-    };
-    run_duration_ms: number;
-  };
+  usage: WorkflowRunUsage;
 }[];
 
 export function createOctokit(): Octokit {
@@ -63,7 +59,7 @@ export async function createRunsSummary(
     repo,
     per_page: 20, // gh run list もデフォルトでは20件表示
   });
-  const runsSummary = res.data.workflow_runs.map((run) => {
+  const runsSummary: RunsSummary = res.data.workflow_runs.map((run) => {
     return {
       name: run.name!,
       owner: run.repository.owner.login,
@@ -74,7 +70,7 @@ export async function createRunsSummary(
       run_id: run.id,
       workflow_id: run.workflow_id,
       run_started_at: run.run_started_at,
-      usage: {} as any, // 後から無理やり追加するので型は一旦anyで雑に対応
+      usage: undefined as unknown as WorkflowRunUsage,
     };
   });
 
@@ -125,7 +121,7 @@ export async function createJobsSummary(
     jobs,
     (job) => job.workflow_name ?? "",
   );
-  const jobsSummary: Record<string, any> = {};
+  const jobsSummary: Record<string, Record<string, unknown>> = {};
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
     for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
@@ -152,7 +148,7 @@ export async function createJobsSummary(
 function createStepsSummary(workflowJobs: WorkflowJobs) {
   const steps = workflowJobs.map((job) => job.steps ?? []).flat();
   const stepsGroup = Object.groupBy(steps, (step) => step.name);
-  const stepsSummary: Record<string, any> = {};
+  const stepsSummary: Record<string, unknown> = {};
   for (const [stepName, steps] of Object.entries(stepsGroup)) {
     const successSteps = steps.filter((step) => step.conclusion === "success");
     const isStepsEmpty = successSteps.length === 0;
