@@ -80,15 +80,20 @@ export async function createRunsSummary(
     };
   });
 
-  // TODO: 雑に追加しすぎているので後で修正する
-  // Add usage data
-  for (const run of runsSummary) {
-    const res = await octokit.actions.getWorkflowRunUsage({
-      owner,
-      repo,
+  // Add usage data to each run
+  const promises = runsSummary.map((run) => {
+    return octokit.actions.getWorkflowRunUsage({
+      owner: run.owner,
+      repo: run.repo,
       run_id: run.run_id,
     });
-    run.usage = res.data;
+  });
+  const workflowUsages = await Promise.all(promises);
+  if (runsSummary.length !== workflowUsages.length) {
+    throw new Error("runsSummary.length !== workflowUsages.length");
+  }
+  for (let i = 0; i < runsSummary.length; i++) {
+    runsSummary[i].usage = workflowUsages[i].data;
   }
 
   return runsSummary;
@@ -98,19 +103,19 @@ export async function createJobsSummary(
   octokit: Octokit,
   runsSummary: RunsSummary,
 ) {
-  const workflowJobs: WorkflowJobs[] = [];
-  for (const run of runsSummary) {
-    const res = await octokit.actions.listJobsForWorkflowRunAttempt({
+  const promises = runsSummary.map((run) => {
+    return octokit.actions.listJobsForWorkflowRunAttempt({
       owner: run.owner,
       repo: run.repo,
       run_id: run.run_id,
       attempt_number: run.run_attemp,
     });
-    workflowJobs.push(res.data.jobs);
-  }
+  });
+  const workflowJobs = (await Promise.all(promises)).map((res) =>
+    res.data.jobs
+  );
 
   const jobs = workflowJobs.flat()
-    .filter((job) => job.conclusion === "success")
     .map((workflowJob) => {
       return {
         ...workflowJob,
@@ -126,10 +131,11 @@ export async function createJobsSummary(
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
     for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
+      const successJobs = jobs.filter((job) => job.conclusion === "success");
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobName] = {
-        minDurationSec: minOf(jobs, (job) => job.durationSec),
-        maxDurationSec: maxOf(jobs, (job) => job.durationSec),
+        minDurationSec: minOf(successJobs, (job) => job.durationSec),
+        maxDurationSec: maxOf(successJobs, (job) => job.durationSec),
         medianDurationSec: 0,
         p90DurationSec: 0,
       };
