@@ -42,6 +42,7 @@ export type RunsSummary = {
 
 type StepsSummary = Record<string, {
   count: number;
+  successCount: number;
   durationSecs: {
     min: number | undefined;
     median: number | undefined;
@@ -125,6 +126,7 @@ type JobsSummary = Record<
   string,
   Record<string, {
     count: number;
+    successCount: number;
     durationSecs: {
       min: number | undefined;
       median: number | undefined;
@@ -188,6 +190,7 @@ export async function createJobsSummary(
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobName] = {
         count: jobs.length,
+        successCount: successJobs.length,
         durationSecs: {
           min: isJobsEmpty ? undefined : min(durationSecs),
           median: isJobsEmpty ? undefined : median(durationSecs),
@@ -215,6 +218,7 @@ function createStepsSummary(workflowJobs: WorkflowJobs): StepsSummary {
     );
     stepsSummary[stepName] = {
       count: steps.length,
+      successCount: successSteps.length,
       durationSecs: {
         min: isStepsEmpty ? undefined : min(stepDurationsSecs),
         median: isStepsEmpty ? undefined : median(stepDurationsSecs),
