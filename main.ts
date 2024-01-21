@@ -2,6 +2,8 @@ import {
   createJobsSummary,
   createOctokit,
   createRunsSummary,
+  fetchWorkflowRuns,
+  fetchWorkflowRunUsages,
 } from "./src/github.ts";
 import { reportActiveCache, reportCacheList } from "./src/rules/cache.ts";
 import {
@@ -13,9 +15,11 @@ import {
 const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
 const [owner, repo] = fullname.split("/");
-export const octokit = createOctokit();
+const octokit = createOctokit();
+const workflowRuns = await fetchWorkflowRuns(octokit, owner, repo, perPage);
+const workflowRunUsages = await fetchWorkflowRunUsages(octokit, workflowRuns);
 
-const runsSummary = await createRunsSummary(octokit, owner, repo, perPage);
+const runsSummary = createRunsSummary(workflowRuns, workflowRunUsages);
 console.log("----runsSummary----");
 console.dir(runsSummary, { depth: null });
 console.log("----jobsSummary----");

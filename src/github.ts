@@ -1,7 +1,7 @@
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
 
-export type Workflow =
+export type WorkflowRun =
   RestEndpointMethodTypes["actions"]["getWorkflowRunAttempt"]["response"][
     "data"
   ];
@@ -43,7 +43,7 @@ export type RunsSummary = {
 type StepsSummary = Record<string, {
   count: number;
   successCount: number;
-  durationSecs: {
+  durationStatSecs: {
     min: number | undefined;
     median: number | undefined;
     p80: number | undefined;
@@ -61,18 +61,57 @@ export function createOctokit(): Octokit {
   });
 }
 
-export async function createRunsSummary(
+export async function fetchWorkflowRunUsages(
+  octokit: Octokit,
+  workflowRuns: WorkflowRun[],
+): Promise<WorkflowRunUsage[]> {
+  const promises = workflowRuns.map((run) => {
+    return octokit.actions.getWorkflowRunUsage({
+      owner: run.repository.owner.login,
+      repo: run.repository.name,
+      run_id: run.id,
+    });
+  });
+  return (await Promise.all(promises)).map((res) => res.data);
+}
+
+async function fetchWorkflowJobs(
+  runsSummary: RunsSummary,
+  octokit: Octokit,
+): Promise<WorkflowJobs> {
+  const promises = runsSummary.map((run) => {
+    return octokit.actions.listJobsForWorkflowRunAttempt({
+      owner: run.owner,
+      repo: run.repo,
+      run_id: run.run_id,
+      attempt_number: run.run_attemp,
+    });
+  });
+  const workflowJobs = (await Promise.all(promises)).map((res) =>
+    res.data.jobs
+  );
+  return workflowJobs.flat();
+}
+
+export async function fetchWorkflowRuns(
   octokit: Octokit,
   owner: string,
   repo: string,
   perPage: number,
-): Promise<RunsSummary> {
+): Promise<WorkflowRun[]> {
   const res = await octokit.actions.listWorkflowRunsForRepo({
     owner,
     repo,
     per_page: perPage,
   });
-  const runsSummary: RunsSummary = res.data.workflow_runs.map((run) => {
+  return res.data.workflow_runs;
+}
+
+export function createRunsSummary(
+  workflowRuns: WorkflowRun[],
+  workflowRunUsages: WorkflowRunUsage[],
+): RunsSummary {
+  const runsSummary: RunsSummary = workflowRuns.map((run) => {
     return {
       name: run.name!,
       owner: run.repository.owner.login,
@@ -87,36 +126,11 @@ export async function createRunsSummary(
     };
   });
 
-  // Add usage data to each run
-  // Example:
-  // usage: {
-  //   billable: {
-  //     UBUNTU: {
-  //       total_ms: 0,
-  //       jobs: 4,
-  //       job_runs: [
-  //         { job_id: 20474751294, duration_ms: 0 },
-  //         { job_id: 20474751396, duration_ms: 0 },
-  //         { job_id: 20474751516, duration_ms: 0 },
-  //         { job_id: 20474762355, duration_ms: 0 }
-  //       ]
-  //     }
-  //   },
-  //   run_duration_ms: 48000
-  // }
-  const promises = runsSummary.map((run) => {
-    return octokit.actions.getWorkflowRunUsage({
-      owner: run.owner,
-      repo: run.repo,
-      run_id: run.run_id,
-    });
-  });
-  const workflowRunUsages = await Promise.all(promises);
   if (runsSummary.length !== workflowRunUsages.length) {
     throw new Error("runsSummary.length !== workflowUsages.length");
   }
   for (let i = 0; i < runsSummary.length; i++) {
-    runsSummary[i].usage = workflowRunUsages[i].data;
+    runsSummary[i].usage = workflowRunUsages[i];
   }
 
   return runsSummary;
@@ -128,7 +142,7 @@ type JobsSummary = Record<
   Record<string, {
     count: number;
     successCount: number;
-    durationSecs: {
+    durationStatSecs: {
       min: number | undefined;
       median: number | undefined;
       p80: number | undefined;
@@ -139,26 +153,35 @@ type JobsSummary = Record<
     billable: Record<RunnerType, { sumDurationMs: number }>;
   }>
 >;
+
+type DurationStat = {
+  min: number | undefined;
+  median: number | undefined;
+  p80: number | undefined;
+  p90: number | undefined;
+  max: number | undefined;
+};
+function createDurationStat(durations: number[]): DurationStat {
+  const isEmpty = durations.length === 0;
+  return {
+    min: isEmpty ? undefined : min(durations),
+    median: isEmpty ? undefined : median(durations),
+    p80: isEmpty ? undefined : quantile(durations, 0.8),
+    p90: isEmpty ? undefined : quantile(durations, 0.9),
+    max: isEmpty ? undefined : max(durations),
+  };
+}
+
 export async function createJobsSummary(
   octokit: Octokit,
   runsSummary: RunsSummary,
 ) {
-  const jobsBillableSummary = createJobsBillableSummary(
+  const jobsBillableSummary = createJobsBillableById(
     runsSummary.map((run) => run.usage),
   );
 
-  const promises = runsSummary.map((run) => {
-    return octokit.actions.listJobsForWorkflowRunAttempt({
-      owner: run.owner,
-      repo: run.repo,
-      run_id: run.run_id,
-      attempt_number: run.run_attemp,
-    });
-  });
-  const workflowJobs = (await Promise.all(promises)).map((res) =>
-    res.data.jobs
-  );
-  const jobs = workflowJobs.flat()
+  const workflowJobs = await fetchWorkflowJobs(runsSummary, octokit);
+  const jobs = workflowJobs
     .map((workflowJob) => {
       return {
         ...workflowJob,
@@ -175,31 +198,17 @@ export async function createJobsSummary(
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
     for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
       const successJobs = jobs.filter((job) => job.conclusion === "success");
-      const isJobsEmpty = successJobs.length === 0;
       const durationSecs = successJobs.map((job) => job.durationSec);
-
-      // TODO: functions化する
-      const jobsBillable = jobs.map((job) => jobsBillableSummary[job.id])
-        .filter((job) => job !== undefined);
-      const jobsBillableSum: Record<string, { sumDurationMs: number }> = {};
-      for (const billable of jobsBillable) {
-        jobsBillableSum[billable.runner] = jobsBillableSum[billable.runner] ??
-          { sumDurationMs: 0 };
-        jobsBillableSum[billable.runner].sumDurationMs += billable.duration_ms;
-      }
 
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobName] = {
         count: jobs.length,
         successCount: successJobs.length,
-        durationSecs: {
-          min: isJobsEmpty ? undefined : min(durationSecs),
-          median: isJobsEmpty ? undefined : median(durationSecs),
-          p80: isJobsEmpty ? undefined : quantile(durationSecs, 0.8),
-          p90: isJobsEmpty ? undefined : quantile(durationSecs, 0.9),
-          max: isJobsEmpty ? undefined : max(durationSecs),
-        },
-        billable: jobsBillableSum,
+        durationStatSecs: createDurationStat(durationSecs),
+        billable: createJobsBillableSummary(
+          jobsBillableSummary,
+          jobs.map((job) => job.id),
+        ),
         stepsSummary: createStepsSummary(jobs),
       };
     }
@@ -213,20 +222,13 @@ function createStepsSummary(workflowJobs: WorkflowJobs): StepsSummary {
   const stepsSummary: StepsSummary = {};
   for (const [stepName, steps] of Object.entries(stepsGroup)) {
     const successSteps = steps.filter((step) => step.conclusion === "success");
-    const isStepsEmpty = successSteps.length === 0;
-    const stepDurationsSecs = successSteps.map((step) =>
+    const durationSecs = successSteps.map((step) =>
       diffSec(step.started_at, step.completed_at)
     );
     stepsSummary[stepName] = {
       count: steps.length,
       successCount: successSteps.length,
-      durationSecs: {
-        min: isStepsEmpty ? undefined : min(stepDurationsSecs),
-        median: isStepsEmpty ? undefined : median(stepDurationsSecs),
-        p80: isStepsEmpty ? undefined : quantile(stepDurationsSecs, 0.8),
-        p90: isStepsEmpty ? undefined : quantile(stepDurationsSecs, 0.9),
-        max: isStepsEmpty ? undefined : max(stepDurationsSecs),
-      },
+      durationStatSecs: createDurationStat(durationSecs),
     };
   }
   return stepsSummary;
@@ -243,13 +245,13 @@ function createStepsSummary(workflowJobs: WorkflowJobs): StepsSummary {
 //   "duration_ms": 0,
 //  }
 // }
-type JobsBillableSummary = Record<string, {
+type JobsBillableById = Record<string, {
   runner: string;
   duration_ms: number;
 }>;
-function createJobsBillableSummary(
+function createJobsBillableById(
   workflowRunUsages: WorkflowRunUsage[],
-): JobsBillableSummary {
+): JobsBillableById {
   const jobsBillableSummary: Record<
     string,
     { runner: string; duration_ms: number }
@@ -267,4 +269,23 @@ function createJobsBillableSummary(
     }
   }
   return jobsBillableSummary;
+}
+
+type JobsBillableSummary = Record<
+  string,
+  { sumDurationMs: number }
+>;
+function createJobsBillableSummary(
+  jobsBillableSummary: JobsBillableById,
+  jobIds: number[],
+): JobsBillableSummary {
+  const jobsBillable = jobIds.map((jobId) => jobsBillableSummary[jobId])
+    .filter((jobBillable) => jobBillable !== undefined);
+  const jobsBillableSum: Record<string, { sumDurationMs: number }> = {};
+  for (const billable of jobsBillable) {
+    jobsBillableSum[billable.runner] = jobsBillableSum[billable.runner] ??
+      { sumDurationMs: 0 };
+    jobsBillableSum[billable.runner].sumDurationMs += billable.duration_ms;
+  }
+  return jobsBillableSum;
 }
