@@ -128,19 +128,20 @@ export async function createJobsSummary(
   const jobsSummary: Record<string, any> = {};
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
-    for (const [jobId, jobs] of Object.entries(jobsJobGroup)) {
-      const jobName = jobs[0].name;
+    for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
       const successJobs = jobs.filter((job) => job.conclusion === "success");
       const isJobsEmpty = successJobs.length === 0;
       const durationSecs = successJobs.map((job) => job.durationSec);
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobName] = {
         count: jobs.length,
-        minDurationSec: isJobsEmpty ? undefined : min(durationSecs),
-        medianDurationSec: isJobsEmpty ? undefined : median(durationSecs),
-        p80DurationSec: isJobsEmpty ? undefined : quantile(durationSecs, 0.8),
-        p90DurationSec: isJobsEmpty ? undefined : quantile(durationSecs, 0.9),
-        maxDurationSec: isJobsEmpty ? undefined : max(durationSecs),
+        durationSecs: {
+          min: isJobsEmpty ? undefined : min(durationSecs),
+          median: isJobsEmpty ? undefined : median(durationSecs),
+          p80: isJobsEmpty ? undefined : quantile(durationSecs, 0.8),
+          p90: isJobsEmpty ? undefined : quantile(durationSecs, 0.9),
+          max: isJobsEmpty ? undefined : max(durationSecs),
+        },
         stepsSummary: createStepsSummary(jobs),
       };
     }
@@ -160,15 +161,13 @@ function createStepsSummary(workflowJobs: WorkflowJobs) {
     );
     stepsSummary[stepName] = {
       count: steps.length,
-      minDurationSec: isStepsEmpty ? undefined : min(stepDurationsSecs),
-      medianDurationSec: isStepsEmpty ? undefined : median(stepDurationsSecs),
-      p80DurationSec: isStepsEmpty
-        ? undefined
-        : quantile(stepDurationsSecs, 0.8),
-      p90DurationSec: isStepsEmpty
-        ? undefined
-        : quantile(stepDurationsSecs, 0.9),
-      maxDurationSec: isStepsEmpty ? undefined : max(stepDurationsSecs),
+      durationSecs: {
+        min: isStepsEmpty ? undefined : min(stepDurationsSecs),
+        median: isStepsEmpty ? undefined : median(stepDurationsSecs),
+        p80: isStepsEmpty ? undefined : quantile(stepDurationsSecs, 0.8),
+        p90: isStepsEmpty ? undefined : quantile(stepDurationsSecs, 0.9),
+        max: isStepsEmpty ? undefined : max(stepDurationsSecs),
+      },
     };
   }
   return stepsSummary;

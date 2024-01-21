@@ -19,7 +19,7 @@ console.log("----runsSummary----");
 console.dir(runsSummary, { depth: null });
 console.log("----jobsSummary----");
 const jobsSummary = await createJobsSummary(octokit, runsSummary);
-console.debug(jobsSummary);
+console.dir(jobsSummary, { depth: null });
 
 await reportWorkflowRetryRuns(runsSummary);
 await reportWorkflowCount(runsSummary);
