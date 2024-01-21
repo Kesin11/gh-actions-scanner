@@ -16,7 +16,7 @@ export const octokit = createOctokit();
 
 const runsSummary = await createRunsSummary(octokit, owner, repo);
 console.log("----runsSummary----");
-// console.debug(runsSummary);
+console.dir(runsSummary, { depth: null });
 console.log("----jobsSummary----");
 const jobsSummary = await createJobsSummary(octokit, runsSummary);
 console.debug(jobsSummary);
