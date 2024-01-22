@@ -15,6 +15,13 @@ export type WorkflowJobs =
 export type WorkflowRunUsage =
   RestEndpointMethodTypes["actions"]["getWorkflowRunUsage"]["response"]["data"];
 
+export type ActionsCacheUsage =
+  RestEndpointMethodTypes["actions"]["getActionsCacheUsage"]["response"][
+    "data"
+  ];
+export type ActionsCacheList =
+  RestEndpointMethodTypes["actions"]["getActionsCacheList"]["response"]["data"];
+
 function diffSec(
   start?: string | Date | null,
   end?: string | Date | null,
@@ -52,59 +59,85 @@ type StepsSummary = Record<string, {
   };
 }>;
 
-export function createOctokit(): Octokit {
-  const token = Deno.env.get("GITHUB_TOKEN");
-  const baseUrl = Deno.env.get("GITHUB_API_URL") ?? "https://api.github.com";
-  return new Octokit({
-    auth: token,
-    baseUrl,
-  });
-}
+export class Github {
+  octokit: Octokit;
 
-export async function fetchWorkflowRunUsages(
-  octokit: Octokit,
-  workflowRuns: WorkflowRun[],
-): Promise<WorkflowRunUsage[]> {
-  const promises = workflowRuns.map((run) => {
-    return octokit.actions.getWorkflowRunUsage({
-      owner: run.repository.owner.login,
-      repo: run.repository.name,
-      run_id: run.id,
+  constructor() {
+    const token = Deno.env.get("GITHUB_TOKEN");
+    const baseUrl = Deno.env.get("GITHUB_API_URL") ?? "https://api.github.com";
+    this.octokit = new Octokit({
+      auth: token,
+      baseUrl,
     });
-  });
-  return (await Promise.all(promises)).map((res) => res.data);
-}
+  }
 
-async function fetchWorkflowJobs(
-  runsSummary: RunsSummary,
-  octokit: Octokit,
-): Promise<WorkflowJobs> {
-  const promises = runsSummary.map((run) => {
-    return octokit.actions.listJobsForWorkflowRunAttempt({
-      owner: run.owner,
-      repo: run.repo,
-      run_id: run.run_id,
-      attempt_number: run.run_attemp,
+  async fetchWorkflowRunUsages(
+    workflowRuns: WorkflowRun[],
+  ): Promise<WorkflowRunUsage[]> {
+    const promises = workflowRuns.map((run) => {
+      return this.octokit.actions.getWorkflowRunUsage({
+        owner: run.repository.owner.login,
+        repo: run.repository.name,
+        run_id: run.id,
+      });
     });
-  });
-  const workflowJobs = (await Promise.all(promises)).map((res) =>
-    res.data.jobs
-  );
-  return workflowJobs.flat();
-}
+    return (await Promise.all(promises)).map((res) => res.data);
+  }
 
-export async function fetchWorkflowRuns(
-  octokit: Octokit,
-  owner: string,
-  repo: string,
-  perPage: number,
-): Promise<WorkflowRun[]> {
-  const res = await octokit.actions.listWorkflowRunsForRepo({
-    owner,
-    repo,
-    per_page: perPage,
-  });
-  return res.data.workflow_runs;
+  async fetchWorkflowJobs(
+    workflowRuns: WorkflowRun[],
+  ): Promise<WorkflowJobs> {
+    const promises = workflowRuns.map((run) => {
+      return this.octokit.actions.listJobsForWorkflowRunAttempt({
+        owner: run.repository.owner.login,
+        repo: run.repository.name,
+        run_id: run.id,
+        attempt_number: run.run_attempt ?? 1,
+      });
+    });
+    const workflowJobs = (await Promise.all(promises)).map((res) =>
+      res.data.jobs
+    );
+    return workflowJobs.flat();
+  }
+
+  async fetchWorkflowRuns(
+    owner: string,
+    repo: string,
+    perPage: number,
+  ): Promise<WorkflowRun[]> {
+    const res = await this.octokit.actions.listWorkflowRunsForRepo({
+      owner,
+      repo,
+      per_page: perPage,
+    });
+    return res.data.workflow_runs;
+  }
+
+  async fetchActionsCacheUsage(
+    owner: string,
+    repo: string,
+  ): Promise<ActionsCacheUsage> {
+    const res = await this.octokit.actions.getActionsCacheUsage({
+      owner,
+      repo,
+    });
+    return res.data;
+  }
+
+  async fetchActionsCacheList(
+    owner: string,
+    repo: string,
+    perPage: number,
+  ): Promise<ActionsCacheList> {
+    const res = await this.octokit.actions.getActionsCacheList({
+      owner,
+      repo,
+      sort: "size_in_bytes",
+      per_page: perPage,
+    });
+    return res.data;
+  }
 }
 
 export function createRunsSummary(
@@ -172,15 +205,14 @@ function createDurationStat(durations: number[]): DurationStat {
   };
 }
 
-export async function createJobsSummary(
-  octokit: Octokit,
+export function createJobsSummary(
   runsSummary: RunsSummary,
+  workflowJobs: WorkflowJobs,
 ) {
   const jobsBillableSummary = createJobsBillableById(
     runsSummary.map((run) => run.usage),
   );
 
-  const workflowJobs = await fetchWorkflowJobs(runsSummary, octokit);
   const jobs = workflowJobs
     .map((workflowJob) => {
       return {
