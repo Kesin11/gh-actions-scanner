@@ -1,20 +1,56 @@
 import { assertEquals } from "https://deno.land/std@0.205.0/assert/mod.ts";
-import { reduceGroups } from "https://deno.land/std@0.212.0/collections/reduce_groups.ts";
+import {
+  createJobsBillableById,
+  createJobsBillableSummary,
+  JobsBillableById,
+  WorkflowRunUsage,
+} from "./src/github.ts";
 
-const sumBy = (records: Record<string, unknown[]>, key: string) => {
-  return reduceGroups(records, (sum, it: any) => sum + it[key], 0);
-};
+Deno.test(createJobsBillableById.name, () => {
+  const workflowRunUsage: WorkflowRunUsage = {
+    billable: {
+      "UBUNTU": {
+        total_ms: 100,
+        jobs: 1,
+        job_runs: [
+          { job_id: 20474751294, duration_ms: 100 },
+        ],
+      },
+      "WINDOWS": {
+        total_ms: 100,
+        jobs: 1,
+        job_runs: [
+          { job_id: 20474751396, duration_ms: 100 },
+        ],
+      },
+    },
+  };
+  assertEquals(createJobsBillableById([workflowRunUsage]), {
+    "20474751294": { // job_id
+      "runner": "UBUNTU",
+      "duration_ms": 100,
+    },
+    "20474751396": {
+      "runner": "WINDOWS",
+      "duration_ms": 100,
+    },
+  });
+});
 
-// 実験のために書いたコードなので消してよい
-Deno.test("sumBy", () => {
-  const billable = [
-    { runner: "UBUNTU", duration_ms: 100 },
-    { runner: "UBUNTU", duration_ms: 200 },
-    { runner: "WINDOWS", duration_ms: 100 },
-  ];
-  const billableGroup = Object.groupBy(billable, (x) => x.runner);
-  assertEquals(sumBy(billableGroup, "duration_ms"), {
-    "UBUNTU": 300,
-    "WINDOWS": 100,
+Deno.test(createJobsBillableSummary.name, () => {
+  const jobsBillableById: JobsBillableById = {
+    "20474751294": { // job_id
+      "runner": "UBUNTU",
+      "duration_ms": 100,
+    },
+    "20474751396": {
+      "runner": "UBUNTU",
+      "duration_ms": 100,
+    },
+  };
+  const jobIds = [20474751294, 20474751396];
+
+  assertEquals(createJobsBillableSummary(jobsBillableById, jobIds), {
+    "UBUNTU": { sumDurationMs: 200 },
   });
 });

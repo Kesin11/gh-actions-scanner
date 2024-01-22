@@ -273,15 +273,15 @@ function createStepsSummary(workflowJobs: WorkflowJobs): StepsSummary {
 //   "duration_ms": 0,
 //  },
 //  "20474751396": {
-//   "runner": "UBUNTU-16",
+//   "runner": "ubuntu_16_core",
 //   "duration_ms": 0,
 //  }
 // }
-type JobsBillableById = Record<string, {
+export type JobsBillableById = Record<string, {
   runner: string;
   duration_ms: number;
 }>;
-function createJobsBillableById(
+export function createJobsBillableById(
   workflowRunUsages: WorkflowRunUsage[],
 ): JobsBillableById {
   const jobsBillableSummary: Record<
@@ -303,15 +303,20 @@ function createJobsBillableById(
   return jobsBillableSummary;
 }
 
-type JobsBillableSummary = Record<
+// Example
+// {
+//   "UBUNTU": { sumDurationMs: 100 },
+//   "WINDOWS": { sumDurationMs: 100 },
+// }
+export type JobsBillableSummary = Record<
   string,
   { sumDurationMs: number }
 >;
-function createJobsBillableSummary(
-  jobsBillableSummary: JobsBillableById,
+export function createJobsBillableSummary(
+  jobsBillableById: JobsBillableById,
   jobIds: number[],
 ): JobsBillableSummary {
-  const jobsBillable = jobIds.map((jobId) => jobsBillableSummary[jobId])
+  const jobsBillable = jobIds.map((jobId) => jobsBillableById[jobId])
     .filter((jobBillable) => jobBillable !== undefined);
   const jobsBillableSum: Record<string, { sumDurationMs: number }> = {};
   for (const billable of jobsBillable) {
