@@ -11,8 +11,12 @@ const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list ã‚‚ãƒ
 const [owner, repo] = fullname.split("/");
 const github = new Github();
 const workflowRuns = await github.fetchWorkflowRuns(owner, repo, perPage);
+console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
+
+const workflowFile = await github.fetchWorkflowFile(workflowRuns[0]);
+console.log(workflowFile);
 
 const runsSummary = createRunsSummary(workflowRuns, workflowRunUsages);
 console.log("----runsSummary----");

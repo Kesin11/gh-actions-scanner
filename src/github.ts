@@ -1,3 +1,4 @@
+import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
 
@@ -34,7 +35,6 @@ function diffSec(
 }
 
 export type RunsSummary = {
-  // 後でoctokitの型から持ってくる
   name: string;
   display_title: string;
   conslusion: string | null;
@@ -137,6 +137,25 @@ export class Github {
       per_page: perPage,
     });
     return res.data;
+  }
+
+  async fetchWorkflowFile(
+    workflowRun: WorkflowRun,
+  ): Promise<string | undefined> {
+    const res = await this.octokit.repos.getContent({
+      owner: workflowRun.repository.owner.login,
+      repo: workflowRun.repository.name,
+      path: workflowRun.path,
+      ref: workflowRun.head_sha,
+    });
+    // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
+    if (!Array.isArray(res.data) && res.data.type === "file") {
+      res.data.content;
+      const textDecoder = new TextDecoder();
+      return textDecoder.decode(decodeBase64(res.data.content));
+    }
+    // Unexpected response
+    return undefined;
   }
 }
 
