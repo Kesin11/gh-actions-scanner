@@ -45,6 +45,7 @@ export type RunsSummary = {
   owner: string;
   repo: string;
   usage: WorkflowRunUsage;
+  workflowFile: string | undefined;
 }[];
 
 type StepsSummary = Record<string, {
@@ -139,29 +140,36 @@ export class Github {
     return res.data;
   }
 
-  async fetchWorkflowFile(
-    workflowRun: WorkflowRun,
-  ): Promise<string | undefined> {
-    const res = await this.octokit.repos.getContent({
-      owner: workflowRun.repository.owner.login,
-      repo: workflowRun.repository.name,
-      path: workflowRun.path,
-      ref: workflowRun.head_sha,
+  async fetchWorkflowFiles(
+    workflowRuns: WorkflowRun[],
+  ): Promise<(string | undefined)[]> {
+    const promises = workflowRuns.map((workflowRun) => {
+      return this.octokit.repos.getContent({
+        owner: workflowRun.repository.owner.login,
+        repo: workflowRun.repository.name,
+        path: workflowRun.path,
+        ref: workflowRun.head_sha,
+      });
     });
-    // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
-    if (!Array.isArray(res.data) && res.data.type === "file") {
-      res.data.content;
-      const textDecoder = new TextDecoder();
-      return textDecoder.decode(decodeBase64(res.data.content));
-    }
-    // Unexpected response
-    return undefined;
+    const contents = (await Promise.all(promises)).map((res) => {
+      // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
+      if (!Array.isArray(res.data) && res.data.type === "file") {
+        res.data.content;
+        const textDecoder = new TextDecoder();
+        return textDecoder.decode(decodeBase64(res.data.content));
+      }
+      // Unexpected response
+      return undefined;
+    });
+
+    return contents;
   }
 }
 
 export function createRunsSummary(
   workflowRuns: WorkflowRun[],
   workflowRunUsages: WorkflowRunUsage[],
+  workflowFiles: (string | undefined)[],
 ): RunsSummary {
   const runsSummary: RunsSummary = workflowRuns.map((run) => {
     return {
@@ -175,14 +183,19 @@ export function createRunsSummary(
       workflow_id: run.workflow_id,
       run_started_at: run.run_started_at,
       usage: undefined as unknown as WorkflowRunUsage,
+      workflowFile: undefined,
     };
   });
 
   if (runsSummary.length !== workflowRunUsages.length) {
     throw new Error("runsSummary.length !== workflowUsages.length");
   }
+  if (runsSummary.length !== workflowFiles.length) {
+    throw new Error("runsSummary.length !== workflowFiles.length");
+  }
   for (let i = 0; i < runsSummary.length; i++) {
     runsSummary[i].usage = workflowRunUsages[i];
+    runsSummary[i].workflowFile = workflowFiles[i];
   }
 
   return runsSummary;

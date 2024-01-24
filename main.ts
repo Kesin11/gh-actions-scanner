@@ -15,10 +15,14 @@ console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 
-const workflowFile = await github.fetchWorkflowFile(workflowRuns[0]);
-console.log(workflowFile);
+const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
+console.log(workflowFiles);
 
-const runsSummary = createRunsSummary(workflowRuns, workflowRunUsages);
+const runsSummary = createRunsSummary(
+  workflowRuns,
+  workflowRunUsages,
+  workflowFiles,
+);
 console.log("----runsSummary----");
 console.dir(runsSummary, { depth: null });
 console.log("----jobsSummary----");
