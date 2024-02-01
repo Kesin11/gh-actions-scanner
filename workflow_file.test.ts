@@ -27,9 +27,9 @@ jobs:
         uses: actions/checkout@v4
   `;
   const workflowModel = new WorkflowModel(yaml);
+
   await t.step("this.obj.name", () => {
-    const obj = workflowModel.obj;
-    assertEquals(obj.name, "CI");
+    assertEquals(workflowModel.raw.name, "CI");
   });
 
   await t.step("jobs", () => {
@@ -49,14 +49,14 @@ Deno.test(JobModel.name, async (t) => {
       { name: "Echo", run: "echo 'Hello, world!'" },
     ],
   };
+  const jobModel = new JobModel(id, job);
+
   await t.step("this.obj.runs-on", () => {
-    const actual = new JobModel(id, job).obj;
-    assertEquals(actual["runs-on"], "ubuntu-latest");
+    assertEquals(jobModel.raw["runs-on"], "ubuntu-latest");
   });
 
   await t.step("steps", () => {
-    const actual = new JobModel(id, job).steps;
-    assertEquals(actual.length, 2);
+    assertEquals(jobModel.steps.length, 2);
   });
 
   // await t.step("match()", () => { });
@@ -64,8 +64,9 @@ Deno.test(JobModel.name, async (t) => {
 
 Deno.test(StepModel.name, async (t) => {
   const step = { uses: "actions/checkout@v4" };
+  const stepModel = new StepModel(step);
+
   await t.step("this.obj.uses", () => {
-    const actual = new StepModel(step).obj;
-    assertEquals(actual.uses, "actions/checkout@v4");
+    assertEquals(stepModel.raw.uses, "actions/checkout@v4");
   });
 });
