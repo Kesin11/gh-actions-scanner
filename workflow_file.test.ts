@@ -3,7 +3,7 @@ import {
   JobModel,
   StepModel,
   WorkflowModel,
-} from "./src/rules/workflowFile.ts";
+} from "./src/rules/workflow_file.ts";
 
 Deno.test(WorkflowModel.name, async (t) => {
   // before的なものを書きたければここに
