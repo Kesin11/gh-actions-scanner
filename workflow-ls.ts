@@ -124,16 +124,13 @@ async function showSteps(steps: StepModel[], indent: number): Promise<void> {
   const space = "  ".repeat(indent);
   for (const step of steps) {
     if (step.isComposite()) {
-      // ./.github/actions/my-compisite/action.yml から先頭の./を削除
-      // TODO: yml決め打ちなのでyamlの場合にエラーになる
-      const localCompositePath = normalize(`${step.raw.uses}/action.yml`);
-      const res = await github.fetchContent({
+      const res = await fetchCompositeActionContent(
         // TODO: 今はmain関数に直接書いているので参照できているだけ
         owner,
         repo,
-        path: localCompositePath,
+        step.raw.uses!,
         ref,
-      });
+      );
       console.log(
         `${space}- composite: ${step.showable} (${res!.raw.html_url})`,
       );
@@ -144,4 +141,27 @@ async function showSteps(steps: StepModel[], indent: number): Promise<void> {
       console.log(`${space}- step: ${step.showable}`);
     }
   }
+}
+
+// Composite Actionsはaction.ymlかaciton.yamlかが確定しないので同時にfetchしてエラーにならない方を採用する
+async function fetchCompositeActionContent(
+  owner: string,
+  repo: string,
+  compositeDir: string,
+  ref: string,
+) {
+  const promiseYml = github.fetchContent({
+    owner,
+    repo,
+    // ./.github/actions/my-compisite/action.yml から先頭の./を削除
+    path: normalize(`${compositeDir}/action.yml`),
+    ref,
+  });
+  const promiseYaml = github.fetchContent({
+    owner,
+    repo,
+    path: normalize(`${compositeDir}/action.yaml`),
+    ref,
+  });
+  return await Promise.any([promiseYml, promiseYaml]);
 }
