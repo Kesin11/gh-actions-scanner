@@ -68,6 +68,11 @@ export class StepModel {
     this.raw = obj;
   }
 
+  get showable(): string {
+    return this.raw.name ?? this.raw.uses ?? this.raw.run ??
+      "Error: Not showable step";
+  }
+
   isComposite(): boolean {
     return true;
   }

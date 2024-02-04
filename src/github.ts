@@ -144,12 +144,28 @@ export class Github {
   async fetchWorkflowFiles(
     workflowRuns: WorkflowRun[],
   ): Promise<(string | undefined)[]> {
-    const promises = workflowRuns.map((workflowRun) => {
-      return this.octokit.repos.getContent({
+    return await this.fetchContent(workflowRuns.map((workflowRun) => {
+      return {
         owner: workflowRun.repository.owner.login,
         repo: workflowRun.repository.name,
         path: workflowRun.path,
         ref: workflowRun.head_sha,
+      };
+    }));
+  }
+
+  async fetchContent(params: {
+    owner: string;
+    repo: string;
+    path: string;
+    ref: string;
+  }[]): Promise<(string | undefined)[]> {
+    const promises = params.map(({ owner, repo, path, ref }) => {
+      return this.octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref,
       });
     });
     const contents = (await Promise.all(promises)).map((res) => {
