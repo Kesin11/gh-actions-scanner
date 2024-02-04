@@ -52,7 +52,7 @@ Deno.test(JobModel.name, async (t) => {
   });
 
   await t.step("steps", () => {
-    assertEquals(jobModel.steps.length, 2);
+    assertEquals(jobModel.steps?.length, 2);
   });
 
   // await t.step("match()", () => { });
