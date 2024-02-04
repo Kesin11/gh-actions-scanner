@@ -20,6 +20,7 @@
 
 import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
 import { normalize } from "https://deno.land/std@0.214.0/path/normalize.ts";
+import { parseArgs } from "https://deno.land/std@0.214.0/cli/parse_args.ts";
 import { Github } from "./src/github.ts";
 import {
   Job,
@@ -72,14 +73,21 @@ class ReusableWorkflowModel {
   }
 }
 
-const fullname = Deno.args[0];
-const [owner, repo] = fullname.split("/");
-const workflow = Deno.args[1];
-const ref = Deno.args[2] || "main"; // とりあえずmain固定
+const args = parseArgs(Deno.args, {
+  string: ["repo", "workflow", "ref"],
+  alias: { R: "repo", w: "workflow", r: "ref" },
+  default: { ref: "main" },
+});
+
+if (!args.repo) throw new Error("repo argument is required");
+const [owner, repo] = args.repo.split("/");
+const workflow = args.workflow;
+if (!workflow) throw new Error("workflow argument is required");
 if (!(workflow.endsWith(".yml") || workflow.endsWith(".yaml"))) {
   // 最終的にはymlでもworkflow_nameでもどっちでもいけるようにしたい
   throw new Error("workflow argument must be .yml or .yaml");
 }
+const ref = args.ref;
 const github = new Github();
 const workflowPath = `.github/workflows/${workflow}`;
 const res = await github.fetchContent({
