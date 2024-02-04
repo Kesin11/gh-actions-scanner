@@ -27,7 +27,7 @@ import {
   Step,
   StepModel,
   WorkflowModel,
-} from "./src/rules/workflow_file.ts";
+} from "./src/workflow_file.ts";
 
 type CompositeAction = {
   name: string;

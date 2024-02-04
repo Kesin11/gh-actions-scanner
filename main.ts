@@ -5,7 +5,7 @@ import {
   reportWorkflowRetryRuns,
   reportWorkflowUsage,
 } from "./src/rules/workflow.ts";
-import { WorkflowModel } from "./src/rules/workflow_file.ts";
+import { WorkflowModel } from "./src/workflow_file.ts";
 
 const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示

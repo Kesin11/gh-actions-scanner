@@ -1,7 +1,7 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
-import { WorkflowModel } from "./rules/workflow_file.ts";
+import { WorkflowModel } from "./workflow_file.ts";
 
 export type WorkflowRun =
   RestEndpointMethodTypes["actions"]["getWorkflowRunAttempt"]["response"][
