@@ -82,12 +82,12 @@ if (!(workflow.endsWith(".yml") || workflow.endsWith(".yaml"))) {
 }
 const github = new Github();
 const workflowPath = `.github/workflows/${workflow}`;
-const [res] = await github.fetchContent([{
+const res = await github.fetchContent({
   owner,
   repo,
   path: workflowPath,
   ref,
-}]);
+});
 
 const workflowModel = new WorkflowModel(res!.content);
 console.log(`workflow: ${workflowModel.raw.name}`);
@@ -99,13 +99,13 @@ async function showJobs(jobs: JobModel[], indent: number): Promise<void> {
     const space = "  ".repeat(indent);
     if (job.isReusable()) {
       const localReusableWorkflowPath = normalize(job.raw.uses!);
-      const [res] = await github.fetchContent([{
+      const res = await github.fetchContent({
         // TODO: 今はmain関数に直接書いているので参照できているだけ
         owner,
         repo,
         path: localReusableWorkflowPath,
         ref,
-      }]);
+      });
       console.log(`${space}reusable: ${job.id} (${res!.raw.html_url})`);
 
       const reusableWorkflowModel = new ReusableWorkflowModel(res!.content);
@@ -125,14 +125,15 @@ async function showSteps(steps: StepModel[], indent: number): Promise<void> {
   for (const step of steps) {
     if (step.isComposite()) {
       // ./.github/actions/my-compisite/action.yml から先頭の./を削除
+      // TODO: yml決め打ちなのでyamlの場合にエラーになる
       const localCompositePath = normalize(`${step.raw.uses}/action.yml`);
-      const [res] = await github.fetchContent([{
+      const res = await github.fetchContent({
         // TODO: 今はmain関数に直接書いているので参照できているだけ
         owner,
         repo,
         path: localCompositePath,
         ref,
-      }]);
+      });
       console.log(
         `${space}- composite: ${step.showable} (${res!.raw.html_url})`,
       );

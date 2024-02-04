@@ -157,17 +157,18 @@ export class Github {
   async fetchWorkflowFiles(
     workflowRuns: WorkflowRun[],
   ): Promise<(string | undefined)[]> {
-    const responses = await this.fetchContent(
-      workflowRuns.map((workflowRun) => {
-        return {
-          owner: workflowRun.repository.owner.login,
-          repo: workflowRun.repository.name,
-          path: workflowRun.path,
-          ref: workflowRun.head_sha,
-        };
-      }),
-    );
-    return responses.map((res) => res?.content);
+    const promises = workflowRuns.map((workflowRun) => {
+      // TODO: fetchContentの側でawaitしてしまっているので並列の効果があるかは怪しいかもしれない
+      return this.fetchContent({
+        owner: workflowRun.repository.owner.login,
+        repo: workflowRun.repository.name,
+        path: workflowRun.path,
+        ref: workflowRun.head_sha,
+      });
+    });
+    return ((await Promise.all(promises)).map((fileContent) =>
+      fileContent?.content
+    ));
   }
 
   async fetchContent(params: {
@@ -175,29 +176,23 @@ export class Github {
     repo: string;
     path: string;
     ref: string;
-  }[]): Promise<({ raw: FileContent; content: string } | undefined)[]> {
-    const promises = params.map(({ owner, repo, path, ref }) => {
-      return this.octokit.repos.getContent({
-        owner,
-        repo,
-        path,
-        ref,
-      });
+  }): Promise<({ raw: FileContent; content: string } | undefined)> {
+    const res = await this.octokit.repos.getContent({
+      owner: params.owner,
+      repo: params.repo,
+      path: params.path,
+      ref: params.ref,
     });
-    const responses = (await Promise.all(promises)).map((res) => {
-      // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
-      if (!Array.isArray(res.data) && res.data.type === "file") {
-        const textDecoder = new TextDecoder();
-        return {
-          raw: res.data,
-          content: textDecoder.decode(decodeBase64(res.data.content)),
-        };
-      }
-      // Unexpected response
-      return undefined;
-    });
-
-    return responses;
+    // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
+    if (!Array.isArray(res.data) && res.data.type === "file") {
+      const textDecoder = new TextDecoder();
+      return {
+        raw: res.data,
+        content: textDecoder.decode(decodeBase64(res.data.content)),
+      };
+    }
+    // Unexpected response
+    return undefined;
   }
 }
 
