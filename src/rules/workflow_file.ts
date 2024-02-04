@@ -22,10 +22,11 @@ export class WorkflowModel {
   }
 }
 
-type Job = {
+export type Job = {
   name?: string;
   "runs-on": string;
-  steps: Step[];
+  uses?: string;
+  steps?: Step[];
   [key: string]: unknown;
 };
 export class JobModel {
@@ -36,8 +37,8 @@ export class JobModel {
     this.raw = obj;
   }
 
-  get steps(): StepModel[] {
-    return this.raw.steps.map((step) => new StepModel(step));
+  get steps(): StepModel[] | undefined {
+    return this.raw.steps?.map((step) => new StepModel(step));
   }
 
   match(options: { id: string; name: string }): boolean {
@@ -48,15 +49,15 @@ export class JobModel {
   }
 
   isReusable(): boolean {
-    return true;
+    return this.raw.uses !== undefined;
   }
 
   isMatrix(): boolean {
-    return true;
+    return true; // TODO: implement
   }
 }
 
-type Step = {
+export type Step = {
   uses?: string;
   name?: string;
   run?: string;
@@ -74,6 +75,14 @@ export class StepModel {
   }
 
   isComposite(): boolean {
-    return true;
+    // Call self as action
+    if (this.raw.uses === "./") return false;
+
+    // Local composite action
+    if (this.raw.uses?.startsWith("./")) return true;
+
+    // TODO: Remote composite action
+
+    return false;
   }
 }

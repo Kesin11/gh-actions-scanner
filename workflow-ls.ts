@@ -18,8 +18,59 @@
 //        - run: test
 //      - run: lint
 
+import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
+import { normalize } from "https://deno.land/std@0.214.0/path/normalize.ts";
 import { Github } from "./src/github.ts";
-import { WorkflowModel } from "./src/rules/workflow_file.ts";
+import {
+  Job,
+  JobModel,
+  Step,
+  StepModel,
+  WorkflowModel,
+} from "./src/rules/workflow_file.ts";
+
+type CompositeAction = {
+  name: string;
+  description: string | undefined;
+  runs: {
+    using: "composite";
+    steps: Step[];
+  };
+};
+class CompositeStepModel {
+  yaml: string;
+  raw: CompositeAction;
+  constructor(rawYaml: string) {
+    this.yaml = rawYaml;
+    this.raw = parse(rawYaml) as CompositeAction;
+  }
+
+  get steps(): StepModel[] {
+    return this.raw.runs.steps.map((step) => new StepModel(step));
+  }
+}
+
+type ReusableWorkflow = {
+  name: string;
+  on: {
+    workflow_call: unknown;
+  };
+  jobs: Record<string, Job>;
+};
+class ReusableWorkflowModel {
+  yaml: string;
+  raw: ReusableWorkflow;
+  constructor(rawYaml: string) {
+    this.yaml = rawYaml;
+    this.raw = parse(rawYaml) as ReusableWorkflow;
+  }
+
+  get jobs(): JobModel[] {
+    return Object.entries(this.raw.jobs).map(([id, job]) =>
+      new JobModel(id, job)
+    );
+  }
+}
 
 const fullname = Deno.args[0];
 const [owner, repo] = fullname.split("/");
@@ -40,9 +91,56 @@ const [content] = await github.fetchContent([{
 
 const workflowModel = new WorkflowModel(content!);
 console.log(`workflow: ${workflowModel.raw.name}`);
-for (const job of workflowModel.jobs) {
-  console.log(`  job:${job.id}`);
-  for (const step of job.steps) {
-    console.log(`    step: ${step.showable}`);
+await showJobs(workflowModel.jobs, 1);
+
+// reusable workflowの場合はjobを展開して再帰的に表示する
+async function showJobs(jobs: JobModel[], indent: number): Promise<void> {
+  for (const job of jobs) {
+    const space = "  ".repeat(indent);
+    // TODO: reusableではないときはstepsは存在する型定義をちゃんと書きたい
+    if (!job.isReusable()) {
+      console.log(`${space}job: ${job.id}`);
+
+      await showSteps(job.steps!, indent + 1);
+    } else {
+      // TODO: URLも表示させたい。fetchContentが本来はGitHub APIの戻り値のurlを返せるのでそれを使う
+      console.log(`${space}reusable: ${job.id}`);
+
+      const localReusableWorkflowPath = normalize(job.raw.uses!);
+      const [content] = await github.fetchContent([{
+        // TODO: 今はmain関数に直接書いているので参照できているだけ
+        owner,
+        repo,
+        path: localReusableWorkflowPath,
+        ref,
+      }]);
+      const reusableWorkflowModel = new ReusableWorkflowModel(content!);
+      await showJobs(reusableWorkflowModel.jobs, indent + 1);
+    }
+  }
+}
+
+// 再帰的にcompositeActionのstepを展開して表示する
+async function showSteps(steps: StepModel[], indent: number): Promise<void> {
+  const space = "  ".repeat(indent);
+  for (const step of steps) {
+    if (step.isComposite()) {
+      // TODO: URLも表示させたい。fetchContentが本来はGitHub APIの戻り値のurlを返せるのでそれを使う
+      console.log(`${space}step: ${step.showable}`);
+
+      // ./.github/actions/my-compisite/action.yml から先頭の./を削除
+      const localCompositePath = normalize(`${step.raw.uses}/action.yml`);
+      const [content] = await github.fetchContent([{
+        // TODO: 今はmain関数に直接書いているので参照できているだけ
+        owner,
+        repo,
+        path: localCompositePath,
+        ref,
+      }]);
+      const compositeActionModel = new CompositeStepModel(content!);
+      await showSteps(compositeActionModel.steps, indent + 1);
+    } else {
+      console.log(`${space}step: ${step.showable}`);
+    }
   }
 }
