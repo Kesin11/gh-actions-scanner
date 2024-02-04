@@ -82,14 +82,14 @@ if (!(workflow.endsWith(".yml") || workflow.endsWith(".yaml"))) {
 }
 const github = new Github();
 const workflowPath = `.github/workflows/${workflow}`;
-const [content] = await github.fetchContent([{
+const [res] = await github.fetchContent([{
   owner,
   repo,
   path: workflowPath,
   ref,
 }]);
 
-const workflowModel = new WorkflowModel(content!);
+const workflowModel = new WorkflowModel(res!.content);
 console.log(`workflow: ${workflowModel.raw.name}`);
 await showJobs(workflowModel.jobs, 1);
 
@@ -97,25 +97,24 @@ await showJobs(workflowModel.jobs, 1);
 async function showJobs(jobs: JobModel[], indent: number): Promise<void> {
   for (const job of jobs) {
     const space = "  ".repeat(indent);
-    // TODO: reusableではないときはstepsは存在する型定義をちゃんと書きたい
-    if (!job.isReusable()) {
-      console.log(`${space}job: ${job.id}`);
-
-      await showSteps(job.steps!, indent + 1);
-    } else {
-      // TODO: URLも表示させたい。fetchContentが本来はGitHub APIの戻り値のurlを返せるのでそれを使う
-      console.log(`${space}reusable: ${job.id}`);
-
+    if (job.isReusable()) {
       const localReusableWorkflowPath = normalize(job.raw.uses!);
-      const [content] = await github.fetchContent([{
+      const [res] = await github.fetchContent([{
         // TODO: 今はmain関数に直接書いているので参照できているだけ
         owner,
         repo,
         path: localReusableWorkflowPath,
         ref,
       }]);
-      const reusableWorkflowModel = new ReusableWorkflowModel(content!);
+      console.log(`${space}reusable: ${job.id} (${res!.raw.html_url})`);
+
+      const reusableWorkflowModel = new ReusableWorkflowModel(res!.content);
       await showJobs(reusableWorkflowModel.jobs, indent + 1);
+    } else {
+      // TODO: reusableではないときはstepsはundefinedではないことが確定しているので型定義をちゃんと書きたい
+      console.log(`${space}job: ${job.id}`);
+
+      await showSteps(job.steps!, indent + 1);
     }
   }
 }
@@ -125,22 +124,23 @@ async function showSteps(steps: StepModel[], indent: number): Promise<void> {
   const space = "  ".repeat(indent);
   for (const step of steps) {
     if (step.isComposite()) {
-      // TODO: URLも表示させたい。fetchContentが本来はGitHub APIの戻り値のurlを返せるのでそれを使う
-      console.log(`${space}step: ${step.showable}`);
-
       // ./.github/actions/my-compisite/action.yml から先頭の./を削除
       const localCompositePath = normalize(`${step.raw.uses}/action.yml`);
-      const [content] = await github.fetchContent([{
+      const [res] = await github.fetchContent([{
         // TODO: 今はmain関数に直接書いているので参照できているだけ
         owner,
         repo,
         path: localCompositePath,
         ref,
       }]);
-      const compositeActionModel = new CompositeStepModel(content!);
+      console.log(
+        `${space}- composite: ${step.showable} (${res!.raw.html_url})`,
+      );
+
+      const compositeActionModel = new CompositeStepModel(res!.content);
       await showSteps(compositeActionModel.steps, indent + 1);
     } else {
-      console.log(`${space}step: ${step.showable}`);
+      console.log(`${space}- step: ${step.showable}`);
     }
   }
 }

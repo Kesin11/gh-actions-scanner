@@ -24,6 +24,19 @@ export type ActionsCacheUsage =
 export type ActionsCacheList =
   RestEndpointMethodTypes["actions"]["getActionsCacheList"]["response"]["data"];
 
+export type FileContent = {
+  type: "file";
+  size: number;
+  name: string;
+  path: string;
+  content?: string | undefined;
+  sha: string;
+  url: string;
+  git_url: string | null;
+  html_url: string | null;
+  download_url: string | null;
+};
+
 function diffSec(
   start?: string | Date | null,
   end?: string | Date | null,
@@ -144,14 +157,17 @@ export class Github {
   async fetchWorkflowFiles(
     workflowRuns: WorkflowRun[],
   ): Promise<(string | undefined)[]> {
-    return await this.fetchContent(workflowRuns.map((workflowRun) => {
-      return {
-        owner: workflowRun.repository.owner.login,
-        repo: workflowRun.repository.name,
-        path: workflowRun.path,
-        ref: workflowRun.head_sha,
-      };
-    }));
+    const responses = await this.fetchContent(
+      workflowRuns.map((workflowRun) => {
+        return {
+          owner: workflowRun.repository.owner.login,
+          repo: workflowRun.repository.name,
+          path: workflowRun.path,
+          ref: workflowRun.head_sha,
+        };
+      }),
+    );
+    return responses.map((res) => res?.content);
   }
 
   async fetchContent(params: {
@@ -159,7 +175,7 @@ export class Github {
     repo: string;
     path: string;
     ref: string;
-  }[]): Promise<(string | undefined)[]> {
+  }[]): Promise<({ raw: FileContent; content: string } | undefined)[]> {
     const promises = params.map(({ owner, repo, path, ref }) => {
       return this.octokit.repos.getContent({
         owner,
@@ -168,18 +184,20 @@ export class Github {
         ref,
       });
     });
-    const contents = (await Promise.all(promises)).map((res) => {
+    const responses = (await Promise.all(promises)).map((res) => {
       // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
       if (!Array.isArray(res.data) && res.data.type === "file") {
-        res.data.content;
         const textDecoder = new TextDecoder();
-        return textDecoder.decode(decodeBase64(res.data.content));
+        return {
+          raw: res.data,
+          content: textDecoder.decode(decodeBase64(res.data.content)),
+        };
       }
       // Unexpected response
       return undefined;
     });
 
-    return contents;
+    return responses;
   }
 }
 
