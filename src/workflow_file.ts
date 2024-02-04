@@ -37,7 +37,8 @@ export class JobModel {
     this.raw = obj;
   }
 
-  get steps(): StepModel[] | undefined {
+  get steps(): StepModel[] {
+    if (this.raw.steps === undefined) return [];
     return this.raw.steps?.map((step) => new StepModel(step));
   }
 
@@ -49,7 +50,12 @@ export class JobModel {
   }
 
   isReusable(): boolean {
-    return this.raw.uses !== undefined;
+    // Local reusable workflow
+    if (this.raw.uses?.startsWith("./")) return true;
+
+    // TODO: Remote reusable workflow
+
+    return false;
   }
 
   isMatrix(): boolean {

@@ -111,10 +111,11 @@ async function showJobs(jobs: JobModel[], indent: number): Promise<void> {
       const reusableWorkflowModel = new ReusableWorkflowModel(res!.content);
       await showJobs(reusableWorkflowModel.jobs, indent + 1);
     } else {
-      // TODO: reusableではないときはstepsはundefinedではないことが確定しているので型定義をちゃんと書きたい
+      // NOTE: 現在は他リポジトリのReusable Workflowには対応していない
+      // isReusable() === false判定された上でstepsが[]なので何も表示されない
       console.log(`${space}job: ${job.id}`);
 
-      await showSteps(job.steps!, indent + 1);
+      await showSteps(job.steps, indent + 1);
     }
   }
 }
@@ -138,6 +139,8 @@ async function showSteps(steps: StepModel[], indent: number): Promise<void> {
       const compositeActionModel = new CompositeStepModel(res!.content);
       await showSteps(compositeActionModel.steps, indent + 1);
     } else {
+      // NOTE: 現在は他リポジトリのComposite Actionには対応していない
+      // 単にusesが表示されるだけ
       console.log(`${space}- step: ${step.showable}`);
     }
   }
