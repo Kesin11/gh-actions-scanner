@@ -24,18 +24,28 @@ export type ActionsCacheUsage =
 export type ActionsCacheList =
   RestEndpointMethodTypes["actions"]["getActionsCacheList"]["response"]["data"];
 
-export type FileContent = {
+export type FileContentResponse = {
   type: "file";
   size: number;
   name: string;
   path: string;
-  content?: string | undefined;
+  content: string;
   sha: string;
   url: string;
   git_url: string | null;
   html_url: string | null;
   download_url: string | null;
 };
+
+export class FileContent {
+  raw: FileContentResponse;
+  content: string;
+  constructor(getContentResponse: FileContentResponse) {
+    this.raw = getContentResponse;
+    const textDecoder = new TextDecoder();
+    this.content = textDecoder.decode(decodeBase64(getContentResponse.content));
+  }
+}
 
 function diffSec(
   start?: string | Date | null,
@@ -78,7 +88,7 @@ export class Github {
   octokit: Octokit;
   token?: string;
   baseUrl: string;
-  contentCache: Map<string, { raw: FileContent; content: string }> = new Map();
+  contentCache: Map<string, FileContent> = new Map();
 
   constructor(
     options?: { token?: string; host?: string },
@@ -173,9 +183,8 @@ export class Github {
 
   async fetchWorkflowFiles(
     workflowRuns: WorkflowRun[],
-  ): Promise<(string | undefined)[]> {
+  ): Promise<(FileContent | undefined)[]> {
     const promises = workflowRuns.map((workflowRun) => {
-      // TODO: fetchContentの側でawaitしてしまっているので並列の効果があるかは怪しいかもしれない
       return this.fetchContent({
         owner: workflowRun.repository.owner.login,
         repo: workflowRun.repository.name,
@@ -183,9 +192,8 @@ export class Github {
         ref: workflowRun.head_sha,
       });
     });
-    return ((await Promise.all(promises)).map((fileContent) =>
-      fileContent?.content
-    ));
+    // NOTE: fetchContentの側でawaitしてしまっているのでPromise.allで並列の効果があるかは怪しいかもしれない
+    return await Promise.all(promises);
   }
 
   async fetchContent(params: {
@@ -193,7 +201,7 @@ export class Github {
     repo: string;
     path: string;
     ref: string;
-  }): Promise<({ raw: FileContent; content: string } | undefined)> {
+  }): Promise<(FileContent | undefined)> {
     // console.debug(`getContent: ${params.owner}/${params.repo}/${params.path}`);
 
     const cache = this.contentCache.get(JSON.stringify(params));
@@ -207,14 +215,10 @@ export class Github {
     });
     // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
     if (!Array.isArray(res.data) && res.data.type === "file") {
-      const textDecoder = new TextDecoder();
-      const result = {
-        raw: res.data,
-        content: textDecoder.decode(decodeBase64(res.data.content)),
-      };
+      const fetchedFileContent = new FileContent(res.data);
 
-      this.contentCache.set(JSON.stringify(params), result);
-      return result;
+      this.contentCache.set(JSON.stringify(params), fetchedFileContent);
+      return fetchedFileContent;
     }
     // Unexpected response
     return undefined;
@@ -252,6 +256,7 @@ export function createRunsSummary(
     runsSummary[i].usage = workflowRunUsages[i];
     const workflowFile = workflowFiles[i];
     runsSummary[i].workflowModel = workflowFile
+      // TODO: runsSummaryにはworkflowModelは含めないことにする
       ? new WorkflowModel(workflowFile)
       : undefined;
   }

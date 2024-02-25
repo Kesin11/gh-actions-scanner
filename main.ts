@@ -19,11 +19,11 @@ const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 
 // TODO: runを日付でソートして、workflow_idごとに最新のrunだけを残してfetchするのもを最小限にする
 // 日付だとブランチごとの最新を考慮できないが、それは実行時のオプションでブランチ指定などを追加してユーザーに任せる
-// TODO: 戻り値をGitHubからの生の型に変更
 const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
 console.log(workflowFiles);
-// TODO: workflowModelsにはnameのattributeを追加しておく
-const workflowModels = workflowFiles.map((file) => new WorkflowModel(file!));
+const workflowModels = workflowFiles
+  .filter((it) => it !== undefined)
+  .map((fileContent) => new WorkflowModel(fileContent!));
 
 const runsSummary = createRunsSummary(
   workflowRuns,

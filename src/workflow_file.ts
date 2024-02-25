@@ -1,18 +1,26 @@
 import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
+import { FileContent } from "./github.ts";
 
 type Workflow = {
-  name: string;
+  name?: string;
   jobs: {
     [key: string]: Job;
   };
   [key: string]: unknown;
 };
 export class WorkflowModel {
-  yaml: string;
+  fileContent: FileContent;
   raw: Workflow;
-  constructor(rawYaml: string) {
-    this.yaml = rawYaml;
-    this.raw = parse(rawYaml) as Workflow;
+  constructor(fileContent: FileContent) {
+    this.fileContent = fileContent;
+    this.raw = parse(fileContent.content) as Workflow;
+  }
+
+  // NOTE: nameが存在しないケースがあるらしいので一応ケアするが後で自分でも挙動を確認する
+  // https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#name
+  // >  If you omit name, GitHub displays the workflow file path relative to the root of the repository.
+  get name(): string {
+    return this.raw.name ?? this.fileContent.raw.path;
   }
 
   get jobs(): JobModel[] {
