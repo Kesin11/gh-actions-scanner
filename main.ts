@@ -11,6 +11,7 @@ const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
 const [owner, repo] = fullname.split("/");
 const github = new Github();
+console.log(`owner: ${owner}, repo: ${repo}, perPage: ${perPage}`);
 const workflowRuns = await github.fetchWorkflowRuns(owner, repo, perPage);
 console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);

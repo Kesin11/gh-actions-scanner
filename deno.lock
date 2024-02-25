@@ -189,6 +189,8 @@
     "https://deno.land/std@0.212.0/encoding/_util.ts": "beacef316c1255da9bc8e95afb1fa56ed69baef919c88dc06ae6cb7a6103d376",
     "https://deno.land/std@0.212.0/encoding/base64.ts": "0ec6d6e6b68fc38f6396277e5184bcd47c1a9db0222fd0b563487eb67e352741",
     "https://deno.land/std@0.212.0/fmt/colors.ts": "71e2d7d9911cf3f4f8cceaabe588fd9a4c0228102f4233da62ffd3e421201de7",
+    "https://deno.land/std@0.212.0/testing/_test_suite.ts": "f10a8a6338b60c403f07a76f3f46bdc9f1e1a820c0a1decddeb2949f7a8a0546",
+    "https://deno.land/std@0.212.0/testing/bdd.ts": "3cbd17bd35f629a76ce63446238dfb4632240dd46b3b205027c45fa3dd67e554",
     "https://deno.land/std@0.212.0/yaml/_error.ts": "f38cdebdb69cde16903d9aa2f3b8a3dd9d13e5f7f3570bf662bfaca69fef669e",
     "https://deno.land/std@0.212.0/yaml/_loader/loader.ts": "7155bbcdefd49812f9b38307ce14b22209cda4db9b4b71e67c6aa655facc31da",
     "https://deno.land/std@0.212.0/yaml/_loader/loader_state.ts": "ee216de6040551940b85473c3185fdb7a6f3030b77153f87a6b7f63f82e489ea",
