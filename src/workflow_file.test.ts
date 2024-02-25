@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.212.0/assert/mod.ts";
-import { JobModel, StepModel, WorkflowModel } from "./src/workflow_file.ts";
+import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
 
 Deno.test(WorkflowModel.name, async (t) => {
   // before的なものを書きたければここに
@@ -51,6 +51,10 @@ Deno.test(JobModel.name, async (t) => {
     assertEquals(jobModel.raw["runs-on"], "ubuntu-latest");
   });
 
+  await t.step("isReusable", () => {
+    assertEquals(jobModel.isReusable(), false);
+  });
+
   await t.step("steps", () => {
     assertEquals(jobModel.steps.length, 2);
   });
@@ -64,5 +68,9 @@ Deno.test(StepModel.name, async (t) => {
 
   await t.step("this.obj.uses", () => {
     assertEquals(stepModel.raw.uses, "actions/checkout@v4");
+  });
+
+  await t.step("isComposite", () => {
+    assertEquals(stepModel.isComposite(), false);
   });
 });
