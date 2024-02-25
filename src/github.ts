@@ -1,7 +1,7 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
-import { WorkflowModel } from "./workflow_file.ts";
+import { JobModel, WorkflowModel } from "./workflow_file.ts";
 
 export type WorkflowRun =
   RestEndpointMethodTypes["actions"]["getWorkflowRunAttempt"]["response"][
@@ -69,7 +69,6 @@ export type RunsSummary = {
   owner: string;
   repo: string;
   usage: WorkflowRunUsage;
-  workflowModel: WorkflowModel | undefined;
 }[];
 
 type StepsSummary = Record<string, {
@@ -228,7 +227,6 @@ export class Github {
 export function createRunsSummary(
   workflowRuns: WorkflowRun[],
   workflowRunUsages: WorkflowRunUsage[],
-  workflowFiles: (string | undefined)[],
 ): RunsSummary {
   const runsSummary: RunsSummary = workflowRuns.map((run) => {
     return {
@@ -249,16 +247,8 @@ export function createRunsSummary(
   if (runsSummary.length !== workflowRunUsages.length) {
     throw new Error("runsSummary.length !== workflowUsages.length");
   }
-  if (runsSummary.length !== workflowFiles.length) {
-    throw new Error("runsSummary.length !== workflowFiles.length");
-  }
   for (let i = 0; i < runsSummary.length; i++) {
     runsSummary[i].usage = workflowRunUsages[i];
-    const workflowFile = workflowFiles[i];
-    runsSummary[i].workflowModel = workflowFile
-      // TODO: runsSummaryにはworkflowModelは含めないことにする
-      ? new WorkflowModel(workflowFile)
-      : undefined;
   }
 
   return runsSummary;
@@ -277,8 +267,10 @@ type JobsSummary = Record<
       p90: number | undefined;
       max: number | undefined;
     };
-    stepsSummary: StepsSummary;
     billable: Record<RunnerType, { sumDurationMs: number }>;
+    stepsSummary: StepsSummary;
+    workflowModel: WorkflowModel | undefined;
+    jobModel: JobModel | undefined;
   }>
 >;
 
@@ -304,12 +296,12 @@ export function createJobsSummary(
   runsSummary: RunsSummary,
   workflowJobs: WorkflowJobs,
   workflowModels: WorkflowModel[],
-) {
+): JobsSummary {
   const jobsBillableSummary = createJobsBillableById(
     runsSummary.map((run) => run.usage),
   );
 
-  // TODO: 関数にまとめる
+  // TODO: 関数にまとめるかクラス化するか後で考える
   const jobs = workflowJobs
     .map((workflowJob) => {
       return {
@@ -319,22 +311,20 @@ export function createJobsSummary(
     });
   const jobsWorkflowGroup = Object.groupBy(
     jobs,
+    // NOTE: workflowのYAMLでname指定無しの場合、WorkflowModel.nameと同じ挙動かどうかは要確認
     (job) => job.workflow_name ?? "",
   );
-
-  // TODO: workflowModelsをnameでgroupBy
-  // groupByを多様するのでmodel側で実装しちゃってもいいかもしれない
+  const workflowModelMap = WorkflowModel.createWorkflowNameMap(workflowModels);
 
   const jobsSummary: JobsSummary = {};
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
-    // TODO: workflowModel.jobs()しておく
+    const workflowJobModelMap = workflowModelMap.get(workflowName)
+      ?.jobsNameMap();
 
     for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
       const successJobs = jobs.filter((job) => job.conclusion === "success");
       const durationSecs = successJobs.map((job) => job.durationSec);
-
-      // TODO: ここでなんとかしてworkflowModel.jobs()の結果をjobNameと紐付ける。難しそう
 
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobName] = {
@@ -346,6 +336,8 @@ export function createJobsSummary(
           jobs.map((job) => job.id),
         ),
         stepsSummary: createStepsSummary(jobs),
+        workflowModel: workflowModelMap.get(workflowName),
+        jobModel: workflowJobModelMap?.get(jobName),
       };
     }
   }

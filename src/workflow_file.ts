@@ -16,6 +16,14 @@ export class WorkflowModel {
     this.raw = parse(fileContent.content) as Workflow;
   }
 
+  // NOTE: WorkflowModelは全てのrunで同一の前提として扱うのでMapで1対1の関係として扱う
+  // mapでループしてMapを作成する場合のvalueは上書きで後勝ちになる
+  static createWorkflowNameMap(
+    workflowModels: WorkflowModel[],
+  ): Map<string, WorkflowModel> {
+    return new Map(workflowModels.map((it) => [it.name, it]));
+  }
+
   // NOTE: nameが存在しないケースがあるらしいので一応ケアするが後で自分でも挙動を確認する
   // https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#name
   // >  If you omit name, GitHub displays the workflow file path relative to the root of the repository.
@@ -27,6 +35,10 @@ export class WorkflowModel {
     return Object.entries(this.raw.jobs).map(([id, job]) =>
       new JobModel(id, job)
     );
+  }
+
+  jobsNameMap(): Map<string, JobModel> {
+    return new Map(this.jobs.map((it) => [it.name, it]));
   }
 }
 
@@ -53,7 +65,7 @@ export class ReusableWorkflowModel {
 }
 
 export type Job = {
-  name?: string;
+  name: string;
   "runs-on": string;
   uses?: string;
   steps?: Step[];
@@ -61,9 +73,11 @@ export type Job = {
 };
 export class JobModel {
   id: string;
+  name: string; // NOTE: nameが無いということは多分ないはず
   raw: Job;
   constructor(id: string, obj: Job) {
     this.id = id;
+    this.name = name;
     this.raw = obj;
   }
 

@@ -28,7 +28,6 @@ const workflowModels = workflowFiles
 const runsSummary = createRunsSummary(
   workflowRuns,
   workflowRunUsages,
-  workflowFiles, // TODO: runsSummaryにはworkflowModelは含めないことにする
 );
 console.log("----runsSummary----");
 console.dir(runsSummary, { depth: null });
