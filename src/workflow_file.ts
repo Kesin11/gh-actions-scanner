@@ -9,6 +9,8 @@ type Workflow = {
   [key: string]: unknown;
 };
 export class WorkflowModel {
+  // TODO: Jobではjob_idを入れているので、一貫性を考えるならrun_idを持つべきかもしれない？
+  // id: string
   fileContent: FileContent;
   raw: Workflow;
   constructor(fileContent: FileContent) {
@@ -37,8 +39,14 @@ export class WorkflowModel {
     );
   }
 
-  jobsNameMap(): Map<string, JobModel> {
-    return new Map(this.jobs.map((it) => [it.name, it]));
+  // jobのAPIの `name` はnameが存在すればname, なければidが入るので両方で引けるようにkvを作成する
+  jobsMap(): Map<string, JobModel> {
+    const maps = new Map(this.jobs.map((it) => [it.id, it]));
+    this.jobs.filter((it) => it.name !== undefined)
+      .forEach((it) => {
+        maps.set(it.name!, it);
+      });
+    return maps;
   }
 }
 
@@ -65,7 +73,7 @@ export class ReusableWorkflowModel {
 }
 
 export type Job = {
-  name: string;
+  name?: string;
   "runs-on": string;
   uses?: string;
   steps?: Step[];
@@ -73,11 +81,11 @@ export type Job = {
 };
 export class JobModel {
   id: string;
-  name: string; // NOTE: nameが無いということは多分ないはず
+  name?: string;
   raw: Job;
   constructor(id: string, obj: Job) {
     this.id = id;
-    this.name = name;
+    this.name = obj.name;
     this.raw = obj;
   }
 

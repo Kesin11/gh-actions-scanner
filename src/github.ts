@@ -306,6 +306,7 @@ export function createJobsSummary(
     .map((workflowJob) => {
       return {
         ...workflowJob,
+        jobRunId: workflowJob.id, // Alias. このidは実行ごとのユニークなid
         durationSec: diffSec(workflowJob.started_at, workflowJob.completed_at),
       };
     });
@@ -318,16 +319,16 @@ export function createJobsSummary(
 
   const jobsSummary: JobsSummary = {};
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
-    const jobsJobGroup = Object.groupBy(jobs, (job) => job.name);
+    const jobsJobGroup = Object.groupBy(jobs, (job) => job.name); // YAMLにnameがあればname, なければキー名がnameとして扱われている
     const workflowJobModelMap = workflowModelMap.get(workflowName)
-      ?.jobsNameMap();
+      ?.jobsMap();
 
-    for (const [jobName, jobs] of Object.entries(jobsJobGroup)) {
+    for (const [jobNameOrId, jobs] of Object.entries(jobsJobGroup)) {
       const successJobs = jobs.filter((job) => job.conclusion === "success");
       const durationSecs = successJobs.map((job) => job.durationSec);
 
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
-      jobsSummary[workflowName][jobName] = {
+      jobsSummary[workflowName][jobNameOrId] = {
         count: jobs.length,
         successCount: successJobs.length,
         durationStatSecs: createDurationStat(durationSecs),
@@ -337,7 +338,7 @@ export function createJobsSummary(
         ),
         stepsSummary: createStepsSummary(jobs),
         workflowModel: workflowModelMap.get(workflowName),
-        jobModel: workflowJobModelMap?.get(jobName),
+        jobModel: workflowJobModelMap?.get(jobNameOrId),
       };
     }
   }
