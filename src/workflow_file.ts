@@ -39,6 +39,7 @@ export class WorkflowModel {
     );
   }
 
+  // TODO: Jobの知識をworkflowが持っているのはおかしいのでJobModelのstaticに移動する
   // jobのAPIの `name` はnameが存在すればname, なければidが入るので両方で引けるようにkvを作成する
   jobsMap(): Map<string, JobModel> {
     const maps = new Map(this.jobs.map((it) => [it.id, it]));
@@ -94,6 +95,20 @@ export class JobModel {
     return this.raw.steps?.map((step) => new StepModel(step));
   }
 
+  // TODO: Stepの知識をJobが持っているのはおかしいのでStepModelのstaticに移動する
+  // stepのAPIの `name` はnameが存在すればnameそのまま, なければ`Run ${uses}`がnameに入っている
+  // nameもusesも`Pre `, `Post `のprefixが付くstepが存在する
+  stepsMap(): Map<string, StepModel> {
+    const steps = this.steps;
+    const maps = new Map(steps.map((it) => [it.name, it]));
+    this.steps.forEach((it) => {
+      maps.set(`Pre ${it.name}`, it);
+      maps.set(`Run ${it.name}`, it);
+      maps.set(`Post ${it.name}`, it);
+    });
+    return maps;
+  }
+
   match(options: { id: string; name: string }): boolean {
     if (this.id === options.id) return true;
     // matrixも考慮。startWithで多分大丈夫？
@@ -110,6 +125,38 @@ export class JobModel {
     if (this.raw.uses?.startsWith("./")) return true;
 
     // TODO: Remote reusable workflow
+
+    return false;
+  }
+}
+
+export type Step = {
+  uses?: string;
+  name?: string;
+  run?: string;
+  [key: string]: unknown;
+};
+export class StepModel {
+  raw: Step;
+  name: string;
+  constructor(obj: Step) {
+    this.raw = obj;
+    this.name = obj.name ?? obj.uses ?? obj.run ?? "";
+  }
+
+  get showable(): string {
+    return this.raw.name ?? this.raw.uses ?? this.raw.run ??
+      "Error: Not showable step";
+  }
+
+  isComposite(): boolean {
+    // Call self as action
+    if (this.raw.uses === "./") return false;
+
+    // Local composite action
+    if (this.raw.uses?.startsWith("./")) return true;
+
+    // TODO: Remote composite action
 
     return false;
   }
@@ -133,35 +180,5 @@ export class CompositeStepModel {
 
   get steps(): StepModel[] {
     return this.raw.runs.steps.map((step) => new StepModel(step));
-  }
-}
-
-export type Step = {
-  uses?: string;
-  name?: string;
-  run?: string;
-  [key: string]: unknown;
-};
-export class StepModel {
-  raw: Step;
-  constructor(obj: Step) {
-    this.raw = obj;
-  }
-
-  get showable(): string {
-    return this.raw.name ?? this.raw.uses ?? this.raw.run ??
-      "Error: Not showable step";
-  }
-
-  isComposite(): boolean {
-    // Call self as action
-    if (this.raw.uses === "./") return false;
-
-    // Local composite action
-    if (this.raw.uses?.startsWith("./")) return true;
-
-    // TODO: Remote composite action
-
-    return false;
   }
 }

@@ -1,7 +1,7 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
-import { JobModel, WorkflowModel } from "./workflow_file.ts";
+import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
 
 export type WorkflowRun =
   RestEndpointMethodTypes["actions"]["getWorkflowRunAttempt"]["response"][
@@ -81,6 +81,7 @@ type StepsSummary = Record<string, {
     p90: number | undefined;
     max: number | undefined;
   };
+  stepModel: StepModel | undefined;
 }>;
 
 export class Github {
@@ -326,6 +327,7 @@ export function createJobsSummary(
     for (const [jobNameOrId, jobs] of Object.entries(jobsJobGroup)) {
       const successJobs = jobs.filter((job) => job.conclusion === "success");
       const durationSecs = successJobs.map((job) => job.durationSec);
+      const jobModel = workflowJobModelMap?.get(jobNameOrId);
 
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobNameOrId] = {
@@ -336,20 +338,24 @@ export function createJobsSummary(
           jobsBillableSummary,
           jobs.map((job) => job.id),
         ),
-        stepsSummary: createStepsSummary(jobs),
+        stepsSummary: createStepsSummary(jobs, jobModel),
         workflowModel: workflowModelMap.get(workflowName),
-        jobModel: workflowJobModelMap?.get(jobNameOrId),
+        jobModel,
       };
     }
   }
   return jobsSummary;
 }
 
-// TODO: 上流のjobsからsteps()を渡してもらう
-function createStepsSummary(workflowJobs: WorkflowJobs): StepsSummary {
+function createStepsSummary(
+  workflowJobs: WorkflowJobs,
+  jobModel?: JobModel,
+): StepsSummary {
   const steps = workflowJobs.map((job) => job.steps ?? []).flat();
-  // TODO: 何とかしてstepsとstepModelの順番を一致させる
+  // TODO: nameが一致するならstepModelと紐付けられる。name無しの場合の工夫が必要
   const stepsGroup = Object.groupBy(steps, (step) => step.name);
+  const stepsMap = jobModel?.stepsMap();
+
   const stepsSummary: StepsSummary = {};
   for (const [stepName, steps] of Object.entries(stepsGroup)) {
     const successSteps = steps.filter((step) => step.conclusion === "success");
@@ -357,9 +363,11 @@ function createStepsSummary(workflowJobs: WorkflowJobs): StepsSummary {
       diffSec(step.started_at, step.completed_at)
     );
     stepsSummary[stepName] = {
+      // TODO:  後でソートするためにnumberを入れたいが、順序が変わっている可能性もあるのでmaxを入れておく
       count: steps.length,
       successCount: successSteps.length,
       durationStatSecs: createDurationStat(durationSecs),
+      stepModel: stepsMap?.get(stepName),
     };
   }
   return stepsSummary;
