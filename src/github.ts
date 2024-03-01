@@ -225,9 +225,11 @@ export class Github {
   }
 }
 
+// TODO: これ以下はAPIを叩いている訳でもないので別ファイルに分けたい
 export function createRunsSummary(
   workflowRuns: WorkflowRun[],
   workflowRunUsages: WorkflowRunUsage[],
+  workflowModels: WorkflowModel[],
 ): RunsSummary {
   const runsSummary: RunsSummary = workflowRuns.map((run) => {
     return {
@@ -248,8 +250,12 @@ export function createRunsSummary(
   if (runsSummary.length !== workflowRunUsages.length) {
     throw new Error("runsSummary.length !== workflowUsages.length");
   }
+  if (runsSummary.length !== workflowModels.length) {
+    throw new Error("runsSummary.length !== workflowModels.length");
+  }
   for (let i = 0; i < runsSummary.length; i++) {
     runsSummary[i].usage = workflowRunUsages[i];
+    runsSummary[i].workflowModel = workflowModels[i]
   }
 
   return runsSummary;

@@ -28,6 +28,7 @@ const workflowModels = workflowFiles
 const runsSummary = createRunsSummary(
   workflowRuns,
   workflowRunUsages,
+  workflowModels
 );
 console.log("----runsSummary----");
 console.dir(runsSummary, { depth: null });
