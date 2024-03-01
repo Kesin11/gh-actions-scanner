@@ -95,20 +95,6 @@ export class JobModel {
     return this.raw.steps?.map((step) => new StepModel(step));
   }
 
-  // TODO: Stepの知識をJobが持っているのはおかしいのでStepModelのstaticに移動する
-  // stepのAPIの `name` はnameが存在すればnameそのまま, なければ`Run ${uses}`がnameに入っている
-  // nameもusesも`Pre `, `Post `のprefixが付くstepが存在する
-  stepsMap(): Map<string, StepModel> {
-    const steps = this.steps;
-    const maps = new Map(steps.map((it) => [it.name, it]));
-    this.steps.forEach((it) => {
-      maps.set(`Pre ${it.name}`, it);
-      maps.set(`Run ${it.name}`, it);
-      maps.set(`Post ${it.name}`, it);
-    });
-    return maps;
-  }
-
   match(options: { id: string; name: string }): boolean {
     if (this.id === options.id) return true;
     // matrixも考慮。startWithで多分大丈夫？
@@ -139,11 +125,38 @@ export type Step = {
 export class StepModel {
   raw: Step;
   name: string;
+  uses?: { // actions/checkout@v4 => { action: actions/checkout, ref: v4 }
+    action: string
+    ref: string
+  }
   constructor(obj: Step) {
     this.raw = obj;
-    this.name = obj.name ?? obj.uses ?? obj.run ?? "";
+    // TODO: need test
+    this.uses = obj.uses ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] } : undefined;
+    // TODO: need test
+    this.name = obj.name ?? obj.run ?? this.uses?.action ?? "";
   }
 
+  // TODO: need test
+  static match(stepModels: StepModel[], rawName: string): StepModel | undefined {
+    if (rawName === "Set up job" || rawName === "Complete job") return undefined;
+
+    // NOTE: stepのAPIの `name` はnameが存在すればnameそのまま, なければ`Run ${uses}`がnameに入っている
+    // nameもusesも`Pre `, `Post `のprefixが付くstepが存在する
+    // さらにusesの場合はPre Run, Post Runのprefixになる
+    const name = rawName.replace(/^(Pre Run |Post Run |Pre |Run |Post )/, "");
+    const action = name.split("@")[0]; 
+    for (const stepModel of stepModels) {
+      // case: rawName comes from step.name or step.run
+      if (stepModel.name === name) return stepModel;
+      // case: rawName comes from step.uses
+      if (stepModel.uses?.action === action) return stepModel;
+    }
+    // case: no match
+    return undefined
+  }
+
+  // TODO: これ必要な場面があるのかわからない
   get showable(): string {
     return this.raw.name ?? this.raw.uses ?? this.raw.run ??
       "Error: Not showable step";

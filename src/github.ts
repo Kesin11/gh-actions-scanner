@@ -354,7 +354,7 @@ function createStepsSummary(
   const steps = workflowJobs.map((job) => job.steps ?? []).flat();
   // TODO: nameが一致するならstepModelと紐付けられる。name無しの場合の工夫が必要
   const stepsGroup = Object.groupBy(steps, (step) => step.name);
-  const stepsMap = jobModel?.stepsMap();
+  const stepModels = jobModel?.steps;
 
   const stepsSummary: StepsSummary = {};
   for (const [stepName, steps] of Object.entries(stepsGroup)) {
@@ -367,7 +367,7 @@ function createStepsSummary(
       count: steps.length,
       successCount: successSteps.length,
       durationStatSecs: createDurationStat(durationSecs),
-      stepModel: stepsMap?.get(stepName),
+      stepModel: StepModel.match(stepModels, stepName)
     };
   }
   return stepsSummary;
