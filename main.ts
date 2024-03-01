@@ -21,9 +21,9 @@ const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 // 日付だとブランチごとの最新を考慮できないが、それは実行時のオプションでブランチ指定などを追加してユーザーに任せる
 const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
 console.log(workflowFiles);
+// NOTE: CodeQLワークフローでは対応するYAMLが存在しないのでundefinedのケースが存在する
 const workflowModels = workflowFiles
-  .filter((it) => it !== undefined)
-  .map((fileContent) => new WorkflowModel(fileContent!));
+  .map((fileContent) => (fileContent) ? new WorkflowModel(fileContent) : undefined);
 
 const runsSummary = createRunsSummary(
   workflowRuns,
