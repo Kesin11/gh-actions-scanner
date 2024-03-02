@@ -1,4 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.212.0/assert/mod.ts";
+import {
+  beforeEach,
+  describe,
+  it,
+} from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
 import { FileContent } from "./github.ts";
 
@@ -41,27 +46,45 @@ jobs:
   });
 });
 
-Deno.test(JobModel.name, async (t) => {
+describe(JobModel.name, () => {
   const id = "test1";
-  const job = {
+  const base = new JobModel(id, {
     "runs-on": "ubuntu-latest",
     steps: [
       { uses: "actions/checkout@v4" },
       { name: "Echo", run: "echo 'Hello, world!'" },
     ],
-  };
-  const jobModel = new JobModel(id, job);
-
-  await t.step("this.obj.runs-on", () => {
-    assertEquals(jobModel.raw["runs-on"], "ubuntu-latest");
   });
 
-  await t.step("isReusable", () => {
-    assertEquals(jobModel.isReusable(), false);
+  it("isReusable", () => {
+    assertEquals(base.isReusable(), false);
   });
 
-  await t.step("steps", () => {
-    assertEquals(jobModel.steps.length, 2);
+  it("steps", () => {
+    assertEquals(base.steps.length, 2);
+  });
+
+  describe("isMatrix", () => {
+    it("matrix key is not defined", () => {
+      assertEquals(base.isMatrix(), false);
+    });
+
+    it("matrix key is defined", () => {
+      const matrixJob = new JobModel(id, {
+        "runs-on": "ubuntu-latest",
+        strategy: {
+          matrix: {
+            node: ["lts", "20"],
+          },
+        },
+        steps: [
+          { uses: "actions/checkout@v4" },
+          { name: "Echo", run: "echo 'Hello, world!'" },
+        ],
+      });
+
+      assertEquals(matrixJob.isMatrix(), true);
+    });
   });
 
   // await t.step("match()", () => { });

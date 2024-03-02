@@ -44,6 +44,10 @@ export type Job = {
   "runs-on": string;
   uses?: string;
   steps?: Step[];
+  strategy?: {
+    matrix?: Record<string, unknown>;
+    [key: string]: unknown;
+  };
   [key: string]: unknown;
 };
 export class JobModel {
@@ -79,7 +83,8 @@ export class JobModel {
   }
 
   isMatrix(): boolean {
-    return true; // TODO: implement
+    if (this.raw.strategy?.matrix !== undefined) return true;
+    return false;
   }
 
   isReusable(): boolean {
