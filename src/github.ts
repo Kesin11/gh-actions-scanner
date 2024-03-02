@@ -69,6 +69,7 @@ export type RunsSummary = {
   owner: string;
   repo: string;
   usage: WorkflowRunUsage;
+  workflowModel: WorkflowModel;
 }[];
 
 type StepsSummary = Record<string, {
@@ -237,7 +238,14 @@ export function createRunsSummary(
   workflowRunUsages: WorkflowRunUsage[],
   workflowModels: WorkflowModel[],
 ): RunsSummary {
-  const runsSummary: RunsSummary = workflowRuns.map((run) => {
+  if (workflowRuns.length !== workflowRunUsages.length) {
+    throw new Error("workflowRuns.length !== workflowUsages.length");
+  }
+  if (workflowRuns.length !== workflowModels.length) {
+    throw new Error("workflowRuns.length !== workflowModels.length");
+  }
+
+  const runsSummary: RunsSummary = workflowRuns.map((run, i) => {
     return {
       name: run.name!,
       owner: run.repository.owner.login,
@@ -248,21 +256,10 @@ export function createRunsSummary(
       run_id: run.id,
       workflow_id: run.workflow_id,
       run_started_at: run.run_started_at,
-      usage: undefined as unknown as WorkflowRunUsage,
-      workflowModel: undefined,
+      usage: workflowRunUsages[i],
+      workflowModel: workflowModels[i],
     };
   });
-
-  if (runsSummary.length !== workflowRunUsages.length) {
-    throw new Error("runsSummary.length !== workflowUsages.length");
-  }
-  if (runsSummary.length !== workflowModels.length) {
-    throw new Error("runsSummary.length !== workflowModels.length");
-  }
-  for (let i = 0; i < runsSummary.length; i++) {
-    runsSummary[i].usage = workflowRunUsages[i];
-    runsSummary[i].workflowModel = workflowModels[i];
-  }
 
   return runsSummary;
 }
