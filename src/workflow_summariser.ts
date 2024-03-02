@@ -137,16 +137,14 @@ export function createJobsSummary(
     if (jobs === undefined) throw new Error("jobs is undefined");
 
     const jobsJobGroup = Object.groupBy(jobs, (job) => job.name); // YAMLにnameがあればname, なければキー名がnameとして扱われている
-    const workflowJobModelMap = workflowModelMap.get(workflowName)
-      ?.jobsMap();
+    const workflowJobModels = workflowModelMap.get(workflowName)?.jobs;
 
     for (const [jobNameOrId, jobs] of Object.entries(jobsJobGroup)) {
       if (jobs === undefined) throw new Error("jobs is undefined");
 
       const successJobs = jobs.filter((job) => job.conclusion === "success");
       const durationSecs = successJobs.map((job) => job.durationSec);
-      // TODO: matrixの場合は `clie_test (lts)` などのようになるので単純なMapでは無理
-      const jobModel = workflowJobModelMap?.get(jobNameOrId);
+      const jobModel = JobModel.match(workflowJobModels, jobNameOrId);
 
       jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
       jobsSummary[workflowName][jobNameOrId] = {

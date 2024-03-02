@@ -9,7 +9,6 @@ type Workflow = {
   [key: string]: unknown;
 };
 export class WorkflowModel {
-  // TODO: Jobではjob_idを入れているので、一貫性を考えるならrun_idを持つべきかもしれない？
   // id: string
   fileContent: FileContent;
   raw: Workflow;
@@ -31,39 +30,6 @@ export class WorkflowModel {
   // >  If you omit name, GitHub displays the workflow file path relative to the root of the repository.
   get name(): string {
     return this.raw.name ?? this.fileContent.raw.path;
-  }
-
-  get jobs(): JobModel[] {
-    return Object.entries(this.raw.jobs).map(([id, job]) =>
-      new JobModel(id, job)
-    );
-  }
-
-  // TODO: Jobの知識をworkflowが持っているのはおかしいのでJobModelのstaticに移動する
-  // jobのAPIの `name` はnameが存在すればname, なければidが入るので両方で引けるようにkvを作成する
-  jobsMap(): Map<string, JobModel> {
-    const maps = new Map(this.jobs.map((it) => [it.id, it]));
-    this.jobs.filter((it) => it.name !== undefined)
-      .forEach((it) => {
-        maps.set(it.name!, it);
-      });
-    return maps;
-  }
-}
-
-type ReusableWorkflow = {
-  name: string;
-  on: {
-    workflow_call: unknown;
-  };
-  jobs: Record<string, Job>;
-};
-export class ReusableWorkflowModel {
-  yaml: string;
-  raw: ReusableWorkflow;
-  constructor(rawYaml: string) {
-    this.yaml = rawYaml;
-    this.raw = parse(rawYaml) as ReusableWorkflow;
   }
 
   get jobs(): JobModel[] {
@@ -95,12 +61,21 @@ export class JobModel {
     return this.raw.steps?.map((step) => new StepModel(step));
   }
 
-  // TODO: StepModel同様のインターフェースにする。matrixの場合の考慮が必要
-  match(options: { id: string; name: string }): boolean {
-    if (this.id === options.id) return true;
+  static match(
+    jobModels: JobModel[] | undefined,
+    rawName: string,
+  ): JobModel | undefined {
+    if (jobModels === undefined) return undefined;
+
+    for (const jobModel of jobModels) {
+      if (jobModel.id === rawName) return jobModel;
+      if (jobModel.name === rawName) return jobModel;
+    }
+
+    // if (this.id === options.id) return true;
     // matrixも考慮。startWithで多分大丈夫？
-    if (this.raw.name && this.raw.name.startsWith(options.name)) return true;
-    return false;
+    // if (this.raw.name && this.raw.name.startsWith(options.name)) return true;
+    return undefined;
   }
 
   isMatrix(): boolean {
@@ -184,23 +159,45 @@ export class StepModel {
   }
 }
 
-type CompositeAction = {
-  name: string;
-  description: string | undefined;
-  runs: {
-    using: "composite";
-    steps: Step[];
-  };
-};
-export class CompositeStepModel {
-  yaml: string;
-  raw: CompositeAction;
-  constructor(rawYaml: string) {
-    this.yaml = rawYaml;
-    this.raw = parse(rawYaml) as CompositeAction;
-  }
+// type ReusableWorkflow = {
+//   name: string;
+//   on: {
+//     workflow_call: unknown;
+//   };
+//   jobs: Record<string, Job>;
+// };
+// export class ReusableWorkflowModel {
+//   yaml: string;
+//   raw: ReusableWorkflow;
+//   constructor(rawYaml: string) {
+//     this.yaml = rawYaml;
+//     this.raw = parse(rawYaml) as ReusableWorkflow;
+//   }
 
-  get steps(): StepModel[] {
-    return this.raw.runs.steps.map((step) => new StepModel(step));
-  }
-}
+//   get jobs(): JobModel[] {
+//     return Object.entries(this.raw.jobs).map(([id, job]) =>
+//       new JobModel(id, job)
+//     );
+//   }
+// }
+
+// type CompositeAction = {
+//   name: string;
+//   description: string | undefined;
+//   runs: {
+//     using: "composite";
+//     steps: Step[];
+//   };
+// };
+// export class CompositeStepModel {
+//   yaml: string;
+//   raw: CompositeAction;
+//   constructor(rawYaml: string) {
+//     this.yaml = rawYaml;
+//     this.raw = parse(rawYaml) as CompositeAction;
+//   }
+
+//   get steps(): StepModel[] {
+//     return this.raw.runs.steps.map((step) => new StepModel(step));
+//   }
+// }
