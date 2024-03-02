@@ -1,6 +1,7 @@
 {
   "tasks": {
     "start": "GITHUB_TOKEN=$(gh auth token) deno run -A main.ts",
-    "dev": "deno run --watch main.ts"
+    "dev": "deno run --watch main.ts",
+    "my_repo_test": "./my_repo_test.sh"
   }
 }
