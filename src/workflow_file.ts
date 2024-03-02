@@ -95,6 +95,7 @@ export class JobModel {
     return this.raw.steps?.map((step) => new StepModel(step));
   }
 
+  // TODO: StepModel同様のインターフェースにする。matrixの場合の考慮が必要
   match(options: { id: string; name: string }): boolean {
     if (this.id === options.id) return true;
     // matrixも考慮。startWithで多分大丈夫？
@@ -141,9 +142,10 @@ export class StepModel {
 
   // TODO: need test
   static match(
-    stepModels: StepModel[],
+    stepModels: StepModel[] | undefined,
     rawName: string,
   ): StepModel | undefined {
+    if (stepModels === undefined) return undefined;
     if (rawName === "Set up job" || rawName === "Complete job") {
       return undefined;
     }
