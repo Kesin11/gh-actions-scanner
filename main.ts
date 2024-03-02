@@ -1,4 +1,8 @@
-import { createJobsSummary, createRunsSummary, Github } from "./src/github.ts";
+import { Github } from "./src/github.ts";
+import {
+  createJobsSummary,
+  createRunsSummary,
+} from "./src/workflow_summariser.ts";
 import { reportActiveCache, reportCacheList } from "./src/rules/cache.ts";
 import {
   reportWorkflowCount,

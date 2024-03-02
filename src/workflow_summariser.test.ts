@@ -1,10 +1,10 @@
 import { assertEquals } from "https://deno.land/std@0.205.0/assert/mod.ts";
+import type { WorkflowRunUsage } from "./github.ts";
 import {
   createJobsBillableById,
   createJobsBillableSummary,
   JobsBillableById,
-  WorkflowRunUsage,
-} from "./src/github.ts";
+} from "./workflow_summariser.ts";
 
 Deno.test(createJobsBillableById.name, () => {
   const workflowRunUsage: WorkflowRunUsage = {
