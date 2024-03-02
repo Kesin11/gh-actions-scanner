@@ -126,26 +126,33 @@ export class StepModel {
   raw: Step;
   name: string;
   uses?: { // actions/checkout@v4 => { action: actions/checkout, ref: v4 }
-    action: string
-    ref: string
-  }
+    action: string;
+    ref: string;
+  };
   constructor(obj: Step) {
     this.raw = obj;
     // TODO: need test
-    this.uses = obj.uses ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] } : undefined;
+    this.uses = obj.uses
+      ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] }
+      : undefined;
     // TODO: need test
     this.name = obj.name ?? obj.run ?? this.uses?.action ?? "";
   }
 
   // TODO: need test
-  static match(stepModels: StepModel[], rawName: string): StepModel | undefined {
-    if (rawName === "Set up job" || rawName === "Complete job") return undefined;
+  static match(
+    stepModels: StepModel[],
+    rawName: string,
+  ): StepModel | undefined {
+    if (rawName === "Set up job" || rawName === "Complete job") {
+      return undefined;
+    }
 
     // NOTE: stepのAPIの `name` はnameが存在すればnameそのまま, なければ`Run ${uses}`がnameに入っている
     // nameもusesも`Pre `, `Post `のprefixが付くstepが存在する
     // さらにusesの場合はPre Run, Post Runのprefixになる
     const name = rawName.replace(/^(Pre Run |Post Run |Pre |Run |Post )/, "");
-    const action = name.split("@")[0]; 
+    const action = name.split("@")[0];
     for (const stepModel of stepModels) {
       // case: rawName comes from step.name or step.run
       if (stepModel.name === name) return stepModel;
@@ -153,7 +160,7 @@ export class StepModel {
       if (stepModel.uses?.action === action) return stepModel;
     }
     // case: no match
-    return undefined
+    return undefined;
   }
 
   // TODO: これ必要な場面があるのかわからない
