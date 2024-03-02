@@ -222,7 +222,9 @@ export class Github {
         return fetchedFileContent;
       }
     } catch (error) {
-      console.debug(`fetchContent: ${params.owner}/${params.repo}/${params.path}`)
+      console.debug(
+        `fetchContent: ${params.owner}/${params.repo}/${params.path}`,
+      );
     }
     // Unexpected response
     return undefined;
@@ -259,7 +261,7 @@ export function createRunsSummary(
   }
   for (let i = 0; i < runsSummary.length; i++) {
     runsSummary[i].usage = workflowRunUsages[i];
-    runsSummary[i].workflowModel = workflowModels[i]
+    runsSummary[i].workflowModel = workflowModels[i];
   }
 
   return runsSummary;
@@ -377,7 +379,7 @@ function createStepsSummary(
       count: steps.length,
       successCount: successSteps.length,
       durationStatSecs: createDurationStat(durationSecs),
-      stepModel: StepModel.match(stepModels, stepName)
+      stepModel: StepModel.match(stepModels, stepName),
     };
   }
   return stepsSummary;

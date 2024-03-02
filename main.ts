@@ -23,12 +23,14 @@ const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
 console.log(workflowFiles);
 // NOTE: CodeQLワークフローでは対応するYAMLが存在しないのでundefinedのケースが存在する
 const workflowModels = workflowFiles
-  .map((fileContent) => (fileContent) ? new WorkflowModel(fileContent) : undefined);
+  .map((fileContent) =>
+    fileContent ? new WorkflowModel(fileContent) : undefined
+  );
 
 const runsSummary = createRunsSummary(
   workflowRuns,
   workflowRunUsages,
-  workflowModels
+  workflowModels,
 );
 console.log("----runsSummary----");
 console.dir(runsSummary, { depth: null });
