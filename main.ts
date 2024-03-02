@@ -12,7 +12,8 @@ const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list も�
 const [owner, repo] = fullname.split("/");
 const github = new Github();
 console.log(`owner: ${owner}, repo: ${repo}, perPage: ${perPage}`);
-const workflowRuns = await github.fetchWorkflowRuns(owner, repo, perPage);
+const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
+  .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
 console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
@@ -21,11 +22,9 @@ const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 // 日付だとブランチごとの最新を考慮できないが、それは実行時のオプションでブランチ指定などを追加してユーザーに任せる
 const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
 console.log(workflowFiles);
-// NOTE: CodeQLワークフローでは対応するYAMLが存在しないのでundefinedのケースが存在する
 const workflowModels = workflowFiles
-  .map((fileContent) =>
-    fileContent ? new WorkflowModel(fileContent) : undefined
-  );
+  .filter((it) => it !== undefined)
+  .map((fileContent) => new WorkflowModel(fileContent!));
 
 const runsSummary = createRunsSummary(
   workflowRuns,
