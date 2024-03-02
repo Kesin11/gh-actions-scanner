@@ -221,7 +221,7 @@ export class Github {
         this.contentCache.set(JSON.stringify(params), fetchedFileContent);
         return fetchedFileContent;
       }
-    } catch (error) {
+    } catch (_error) {
       console.debug(
         `fetchContent: ${params.owner}/${params.repo}/${params.path}`,
       );
