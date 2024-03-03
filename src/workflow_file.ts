@@ -74,11 +74,19 @@ export class JobModel {
     for (const jobModel of jobModels) {
       if (jobModel.id === rawName) return jobModel;
       if (jobModel.name === rawName) return jobModel;
+
+      if (jobModel.isMatrix()) {
+        // case: 'name' is not defined
+        if (rawName.startsWith(jobModel.id)) return jobModel;
+
+        if (jobModel.name === undefined) continue;
+        // case: 'name' is defined
+        // NOTE: If matrix has multiple keys, it maybe can not possible to perfect match.
+        const trimedName = jobModel.name.replace(/\$\{\{.+\}\}/g, "").trim();
+        if (rawName.includes(trimedName)) return jobModel;
+      }
     }
 
-    // if (this.id === options.id) return true;
-    // matrixも考慮。startWithで多分大丈夫？
-    // if (this.raw.name && this.raw.name.startsWith(options.name)) return true;
     return undefined;
   }
 

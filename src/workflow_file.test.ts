@@ -47,8 +47,8 @@ jobs:
 });
 
 describe(JobModel.name, () => {
-  const id = "test1";
-  const base = new JobModel(id, {
+  const baseId = "base";
+  const base = new JobModel(baseId, {
     "runs-on": "ubuntu-latest",
     steps: [
       { uses: "actions/checkout@v4" },
@@ -65,29 +65,107 @@ describe(JobModel.name, () => {
   });
 
   describe("isMatrix", () => {
-    it("matrix key is not defined", () => {
+    it("'matrix' is not defined", () => {
       assertEquals(base.isMatrix(), false);
     });
 
-    it("matrix key is defined", () => {
-      const matrixJob = new JobModel(id, {
+    it("'matrix' key is defined", () => {
+      const matrixJob = new JobModel(baseId, {
         "runs-on": "ubuntu-latest",
         strategy: {
           matrix: {
             node: ["lts", "20"],
           },
         },
-        steps: [
-          { uses: "actions/checkout@v4" },
-          { name: "Echo", run: "echo 'Hello, world!'" },
-        ],
+        steps: [],
       });
 
       assertEquals(matrixJob.isMatrix(), true);
     });
   });
 
-  // await t.step("match()", () => { });
+  describe("match", () => {
+    it("'name' is defined", () => {
+      const apiResponseName = "test1";
+      const id = "test1";
+      const expectJob = new JobModel(id, {
+        "runs-on": "ubuntu-latest",
+        steps: [],
+      });
+
+      const actual = JobModel.match([base, expectJob], apiResponseName);
+      assertEquals(actual, expectJob);
+    });
+
+    it("'name' is not defined", () => {
+      const apiResponseName = "named_test1";
+      const id = "test1";
+      const expectJob = new JobModel(id, {
+        "runs-on": "ubuntu-latest",
+        "name": "named_test1",
+        steps: [],
+      });
+
+      const actual = JobModel.match([base, expectJob], apiResponseName);
+      assertEquals(actual, expectJob);
+    });
+
+    it("'matrix is defined, 'name' is not defined", () => {
+      const apiResponseName = "matrix_test (lts)";
+      const id = "matrix_test";
+      const expectJob = new JobModel(id, {
+        "runs-on": "ubuntu-latest",
+        strategy: {
+          matrix: {
+            node: ["lts", "20"],
+          },
+        },
+        steps: [],
+      });
+
+      const actual = JobModel.match([base, expectJob], apiResponseName);
+      assertEquals(actual, expectJob);
+    });
+
+    describe("both 'matrix' and 'name' are defined", () => {
+      it("single matrix key", () => {
+        const apiResponseName = "test2: node lts";
+        const id = "matrix_test";
+        const expectJob = new JobModel(id, {
+          "runs-on": "ubuntu-latest",
+          strategy: {
+            matrix: {
+              node: ["lts", "20"],
+            },
+          },
+          name: "test2: node ${{ matrix.node }}",
+          steps: [],
+        });
+
+        const actual = JobModel.match([base, expectJob], apiResponseName);
+        assertEquals(actual, expectJob);
+      });
+
+      it("multiple matrix key", () => {
+        const apiResponseName = "test2: node lts, os ubuntu-20.04";
+        const id = "matrix_test";
+        const expectJob = new JobModel(id, {
+          "runs-on": "ubuntu-latest",
+          strategy: {
+            matrix: {
+              node: ["lts", "20"],
+              os: ["ubuntu-20.04", "ubutnu-22.04"],
+            },
+          },
+          name: "test2: node ${{ matrix.node }}, os ${{ matrix.os }}",
+          steps: [],
+        });
+
+        const actual = JobModel.match([base, expectJob], apiResponseName);
+        assertEquals(actual, expectJob);
+      });
+    });
+  });
 });
 
 Deno.test(StepModel.name, async (t) => {
