@@ -1,9 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.212.0/assert/mod.ts";
-import {
-  beforeEach,
-  describe,
-  it,
-} from "https://deno.land/std@0.212.0/testing/bdd.ts";
+import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
 import { FileContent } from "./github.ts";
 
@@ -168,15 +164,163 @@ describe(JobModel.name, () => {
   });
 });
 
-Deno.test(StepModel.name, async (t) => {
-  const step = { uses: "actions/checkout@v4" };
-  const stepModel = new StepModel(step);
+describe(StepModel.name, () => {
+  describe("this.uses", () => {
+    it("actions/checkout@v4: ref is version tag", () => {
+      const stepModel = new StepModel({ uses: "actions/checkout@v4" });
+      assertEquals(stepModel.uses, { action: "actions/checkout", ref: "v4" });
+    });
 
-  await t.step("this.obj.uses", () => {
-    assertEquals(stepModel.raw.uses, "actions/checkout@v4");
+    it("actions/checkout@v4: ref is commit hash", () => {
+      const stepModel = new StepModel({
+        uses: "actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11",
+      });
+      assertEquals(stepModel.uses, {
+        action: "actions/checkout",
+        ref: "b4ffde65f46336ab88eb53be808477a3936bae11",
+      });
+    });
+
+    it("./.github/actions/composite: Composite action", () => {
+      const stepModel = new StepModel({
+        uses: "./.github/acitons/composite",
+      });
+      assertEquals(stepModel.uses, {
+        action: "./.github/acitons/composite",
+        ref: undefined,
+      });
+    });
   });
 
-  await t.step("isComposite", () => {
-    assertEquals(stepModel.isComposite(), false);
+  describe("this.name", () => {
+    it("Only uses is defined", () => {
+      const stepModel = new StepModel({
+        uses: "actions/checkout@v4",
+      });
+      assertEquals(stepModel.name, "actions/checkout");
+    });
+
+    it("Both uses and name are defined", () => {
+      const stepModel = new StepModel({
+        uses: "actions/checkout@v4",
+        name: "Checkout",
+      });
+      assertEquals(stepModel.name, "Checkout");
+    });
+
+    it("Only run is defined", () => {
+      const stepModel = new StepModel({
+        run: "echo 'Hello, world!'",
+      });
+      assertEquals(stepModel.name, "echo 'Hello, world!'");
+    });
+
+    it("Both run and name are defined", () => {
+      const stepModel = new StepModel({
+        run: "echo 'Hello, world!'",
+        name: "Echo",
+      });
+      assertEquals(stepModel.name, "Echo");
+    });
+
+    it("Composite action", () => {
+      const stepModel = new StepModel({
+        uses: "./.github/acitons/composite",
+      });
+      assertEquals(stepModel.name, "./.github/acitons/composite");
+    });
+  });
+
+  describe("match", () => {
+    const preStep = new StepModel({ uses: "dummy/pre-step@v1" });
+    const namedPreStep = new StepModel({
+      uses: "dummy/pre-step@v1",
+      name: "Pre-step",
+    });
+    const postStep = new StepModel({ uses: "Kesin11/actions-timeline@v2" });
+    const namedPostStep = new StepModel({
+      uses: "Kesin11/actions-timeline@v2",
+      name: "Actions-timeline",
+    });
+    const planeStep = new StepModel({ uses: "actions/checkout@v4" });
+    const namedPlaneStep = new StepModel({
+      uses: "actions/checkout@v4",
+      name: "Checkout",
+    });
+    const runStep = new StepModel({ run: "echo 'Hello, world!'" });
+    const namedRunStep = new StepModel({
+      run: "echo 'Hello, world!'",
+      name: "Echo",
+    });
+    const stepModels = [
+      preStep,
+      namedPreStep,
+      postStep,
+      namedPostStep,
+      planeStep,
+      namedPlaneStep,
+      runStep,
+      namedRunStep,
+    ];
+
+    describe("Return undefined cases", () => {
+      it("Target stepModels is undefined", () => {
+        const actual = StepModel.match(undefined, "dummy/pre-step@v1");
+        assertEquals(actual, undefined);
+      });
+
+      it("Set up job", () => {
+        const actual = StepModel.match(stepModels, "Step up job");
+        assertEquals(actual, undefined);
+      });
+
+      it("Complete job", () => {
+        const actual = StepModel.match(stepModels, "Complete job");
+        assertEquals(actual, undefined);
+      });
+    });
+
+    it("Has pre process step", () => {
+      const actual = StepModel.match(stepModels, "Pre Run dummy/pre-step@v1");
+      assertEquals(actual, preStep);
+    });
+
+    it("Has pre process named step", () => {
+      const actual = StepModel.match(stepModels, "Pre Pre-step");
+      assertEquals(actual, namedPreStep);
+    });
+
+    it("Has post process step", () => {
+      const actual = StepModel.match(
+        stepModels,
+        "Post Run Kesin11/actions-timeline@v2",
+      );
+      assertEquals(actual, postStep);
+    });
+
+    it("Has post process named step", () => {
+      const actual = StepModel.match(stepModels, "Post Actions-timeline");
+      assertEquals(actual, namedPostStep);
+    });
+
+    it("Plane step", () => {
+      const actual = StepModel.match(stepModels, "Run actions/checkout@v4");
+      assertEquals(actual, planeStep);
+    });
+
+    it("Plane named step", () => {
+      const actual = StepModel.match(stepModels, "Checkout");
+      assertEquals(actual, namedPlaneStep);
+    });
+
+    it("Run step", () => {
+      const actual = StepModel.match(stepModels, "Run echo 'Hello, world!'");
+      assertEquals(actual, runStep);
+    });
+
+    it("Run named step", () => {
+      const actual = StepModel.match(stepModels, "Echo");
+      assertEquals(actual, namedRunStep);
+    });
   });
 });

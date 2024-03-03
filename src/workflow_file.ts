@@ -116,19 +116,16 @@ export class StepModel {
   name: string;
   uses?: { // actions/checkout@v4 => { action: actions/checkout, ref: v4 }
     action: string;
-    ref: string;
+    ref?: string;
   };
   constructor(obj: Step) {
     this.raw = obj;
-    // TODO: need test
     this.uses = obj.uses
       ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] }
       : undefined;
-    // TODO: need test
     this.name = obj.name ?? obj.run ?? this.uses?.action ?? "";
   }
 
-  // TODO: need test
   static match(
     stepModels: StepModel[] | undefined,
     rawName: string,
@@ -151,12 +148,6 @@ export class StepModel {
     }
     // case: no match
     return undefined;
-  }
-
-  // TODO: これ必要な場面があるのかわからない
-  get showable(): string {
-    return this.raw.name ?? this.raw.uses ?? this.raw.run ??
-      "Error: Not showable step";
   }
 
   isComposite(): boolean {

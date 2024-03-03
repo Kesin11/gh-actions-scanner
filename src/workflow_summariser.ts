@@ -168,7 +168,6 @@ function createStepsSummary(
   jobModel?: JobModel,
 ): StepsSummary {
   const steps = workflowJobs.map((job) => job.steps ?? []).flat();
-  // TODO: nameが一致するならstepModelと紐付けられる。name無しの場合の工夫が必要
   const stepsGroup = Object.groupBy(steps, (step) => step.name);
   const stepModels = jobModel?.steps;
 
@@ -190,6 +189,7 @@ function createStepsSummary(
   }
   return stepsSummary;
 }
+
 // Example:
 // {
 //  "20474751294": { // job_id
@@ -201,7 +201,6 @@ function createStepsSummary(
 //   "duration_ms": 0,
 //  }
 // }
-
 export type JobsBillableById = Record<string, {
   runner: string;
   duration_ms: number;
