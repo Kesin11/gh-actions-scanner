@@ -12,7 +12,7 @@ export type RunsSummary = {
   run_started_at: string | undefined;
   owner: string;
   repo: string;
-  usage: WorkflowRunUsage;
+  usage: WorkflowRunUsage | undefined;
   workflowModel: WorkflowModel;
 }[];
 
@@ -42,10 +42,10 @@ function diffSec(
 
 export function createRunsSummary(
   workflowRuns: WorkflowRun[],
-  workflowRunUsages: WorkflowRunUsage[],
+  workflowRunUsages: WorkflowRunUsage[] | undefined,
   workflowModels: WorkflowModel[],
 ): RunsSummary {
-  if (workflowRuns.length !== workflowRunUsages.length) {
+  if (workflowRunUsages && workflowRuns.length !== workflowRunUsages.length) {
     throw new Error("workflowRuns.length !== workflowUsages.length");
   }
   if (workflowRuns.length !== workflowModels.length) {
@@ -63,7 +63,7 @@ export function createRunsSummary(
       run_id: run.id,
       workflow_id: run.workflow_id,
       run_started_at: run.run_started_at,
-      usage: workflowRunUsages[i],
+      usage: workflowRunUsages?.at(i),
       workflowModel: workflowModels[i],
     };
   });
@@ -206,13 +206,15 @@ export type JobsBillableById = Record<string, {
   duration_ms: number;
 }>;
 export function createJobsBillableById(
-  workflowRunUsages: WorkflowRunUsage[],
+  workflowRunUsages: Array<WorkflowRunUsage | undefined>,
 ): JobsBillableById {
   const jobsBillableSummary: Record<
     string,
     { runner: string; duration_ms: number }
   > = {};
   for (const workflowRunUsage of workflowRunUsages) {
+    if (workflowRunUsage === undefined) continue;
+
     for (
       const [runner, billable] of Object.entries(workflowRunUsage.billable)
     ) {

@@ -1,5 +1,5 @@
 import { sumOf } from "https://deno.land/std@0.212.0/collections/sum_of.ts";
-import { RunsSummary } from "../github.ts";
+import { RunsSummary } from "../workflow_summariser.ts";
 
 export function reportWorkflowRetryRuns(runsSummary: RunsSummary) {
   const retriedRuns = runsSummary.filter((run) =>

@@ -49,12 +49,14 @@ export class Github {
   octokit: Octokit;
   token?: string;
   baseUrl: string;
+  isGHES: boolean;
   contentCache: Map<string, FileContent> = new Map();
 
   constructor(
     options?: { token?: string; host?: string },
   ) {
     this.baseUrl = Github.getBaseUrl(options?.host);
+    this.isGHES = this.baseUrl !== "https://api.github.com";
     this.token = options?.token ?? Deno.env.get("GITHUB_TOKEN") ?? undefined,
       this.octokit = new Octokit({
         auth: this.token,
@@ -76,7 +78,10 @@ export class Github {
 
   async fetchWorkflowRunUsages(
     workflowRuns: WorkflowRun[],
-  ): Promise<WorkflowRunUsage[]> {
+  ): Promise<WorkflowRunUsage[] | undefined> {
+    // NOTE: GHES does not support this API
+    if (this.isGHES) return undefined;
+
     const promises = workflowRuns.map((run) => {
       return this.octokit.actions.getWorkflowRunUsage({
         owner: run.repository.owner.login,
