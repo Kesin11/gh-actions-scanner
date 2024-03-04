@@ -1,6 +1,10 @@
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
 import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
-import { WorkflowJobs, WorkflowRun, WorkflowRunUsage } from "./github.ts";
+import {
+  WorkflowJobs,
+  WorkflowRun,
+  WorkflowRunUsage,
+} from "../packages/github/github.ts";
 
 export type RunsSummary = {
   name: string;

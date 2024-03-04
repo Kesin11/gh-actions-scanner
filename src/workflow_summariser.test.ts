@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.205.0/assert/mod.ts";
-import type { WorkflowRunUsage } from "./github.ts";
+import type { WorkflowRunUsage } from "../packages/github/github.ts";
 import {
   createJobsBillableById,
   createJobsBillableSummary,

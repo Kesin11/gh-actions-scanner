@@ -1,4 +1,4 @@
-import { Github } from "./src/github.ts";
+import { Github } from "./packages/github/github.ts";
 import {
   createJobsSummary,
   createRunsSummary,

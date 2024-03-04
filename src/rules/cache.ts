@@ -1,4 +1,7 @@
-import { ActionsCacheList, ActionsCacheUsage } from "../github.ts";
+import {
+  ActionsCacheList,
+  ActionsCacheUsage,
+} from "../../packages/github/github.ts";
 
 export function reportActiveCache(
   activeCache: ActionsCacheUsage,
