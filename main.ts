@@ -55,4 +55,4 @@ const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
 reportActiveCache(cacheUsage);
 reportCacheList(cacheList);
 
-await checkSlowArtifactAction(jobsSummary);
+checkSlowArtifactAction(jobsSummary);

@@ -5,7 +5,7 @@ const THRESHOLD_DURATION_SEC = 60;
 const THRESHOLD_VERSION = "v3";
 
 // stepsSummary.durationStatSecsが一定以上 && actions/download-artifact@v3を使っている場合はv4を推奨する
-export async function checkSlowArtifactAction(jobsSummary: JobsSummary) {
+export function checkSlowArtifactAction(jobsSummary: JobsSummary) {
   console.log("----checkSlowArtifactAction----");
   // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepsSummaryを抽出
   const artifactSteps = Object.values(jobsSummary).flatMap((jobs) => {
