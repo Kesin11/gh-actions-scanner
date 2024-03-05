@@ -75,7 +75,7 @@ export function createRunsSummary(
   return runsSummary;
 }
 type RunnerType = string;
-type JobsSummary = Record<
+export type JobsSummary = Record<
   string,
   Record<string, {
     count: number;

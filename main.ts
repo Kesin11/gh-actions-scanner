@@ -10,6 +10,7 @@ import {
   reportWorkflowUsage,
 } from "./src/rules/workflow.ts";
 import { WorkflowModel } from "./src/workflow_file.ts";
+import { checkSlowArtifactAction } from "./src/rules/artifact.ts";
 
 const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
@@ -53,3 +54,5 @@ const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
 const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
 reportActiveCache(cacheUsage);
 reportCacheList(cacheList);
+
+await checkSlowArtifactAction(jobsSummary);
