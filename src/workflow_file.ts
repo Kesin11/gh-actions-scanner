@@ -109,6 +109,7 @@ export type Step = {
   uses?: string;
   name?: string;
   run?: string;
+  with?: Record<string, unknown>;
   [key: string]: unknown;
 };
 export class StepModel {
