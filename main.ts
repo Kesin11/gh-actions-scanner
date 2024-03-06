@@ -11,6 +11,7 @@ import {
 } from "./src/rules/workflow.ts";
 import { WorkflowModel } from "./src/workflow_file.ts";
 import { checkSlowArtifactAction } from "./src/rules/artifact.ts";
+import { checkCheckoutFilterBlobNone } from "./src/rules/checkout.ts";
 
 const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
@@ -56,3 +57,4 @@ reportActiveCache(cacheUsage);
 reportCacheList(cacheList);
 
 checkSlowArtifactAction(jobsSummary);
+checkCheckoutFilterBlobNone(jobsSummary);
