@@ -6,6 +6,14 @@ import {
   WorkflowRunUsage,
 } from "../packages/github/github.ts";
 
+type DurationStat = {
+  min: number | undefined;
+  median: number | undefined;
+  p80: number | undefined;
+  p90: number | undefined;
+  max: number | undefined;
+};
+
 export type RunsSummary = {
   name: string;
   display_title: string;
@@ -23,13 +31,7 @@ export type RunsSummary = {
 export type StepsSummary = Record<string, {
   count: number;
   successCount: number;
-  durationStatSecs: {
-    min: number | undefined;
-    median: number | undefined;
-    p80: number | undefined;
-    p90: number | undefined;
-    max: number | undefined;
-  };
+  durationStatSecs: DurationStat;
   stepModel: StepModel | undefined;
 }>;
 
@@ -80,26 +82,13 @@ export type JobsSummary = Record<
   Record<string, {
     count: number;
     successCount: number;
-    durationStatSecs: {
-      min: number | undefined;
-      median: number | undefined;
-      p80: number | undefined;
-      p90: number | undefined;
-      max: number | undefined;
-    };
-    billable: Record<RunnerType, { sumDurationMs: number }>;
+    durationStatSecs: DurationStat;
+    billableStatSecs: Record<RunnerType, DurationStat>;
     stepsSummary: StepsSummary;
     workflowModel: WorkflowModel | undefined;
     jobModel: JobModel | undefined;
   }>
 >;
-type DurationStat = {
-  min: number | undefined;
-  median: number | undefined;
-  p80: number | undefined;
-  p90: number | undefined;
-  max: number | undefined;
-};
 function createDurationStat(durations: number[]): DurationStat {
   const isEmpty = durations.length === 0;
   return {
@@ -155,7 +144,7 @@ export function createJobsSummary(
         count: jobs.length,
         successCount: successJobs.length,
         durationStatSecs: createDurationStat(durationSecs),
-        billable: createJobsBillableSummary(
+        billableStatSecs: createJobsBillableStat(
           jobsBillableSummary,
           jobs.map((job) => job.id),
         ),
@@ -232,27 +221,38 @@ export function createJobsBillableById(
   }
   return jobsBillableSummary;
 }
+
 // Example
 // {
-//   "UBUNTU": { sumDurationMs: 100 },
-//   "WINDOWS": { sumDurationMs: 100 },
+// "UBUNTU": {
+//   min: 10
+//   median: 30
+//   p80: 50
+//   p90: 60
+//   max: 60
+// },
+//   "WINDOWS": { ... },
 // }
-
-export type JobsBillableSummary = Record<
+export type JobsBillableStat = Record<
   string,
-  { sumDurationMs: number }
+  DurationStat
 >;
-export function createJobsBillableSummary(
+export function createJobsBillableStat(
   jobsBillableById: JobsBillableById,
   jobIds: number[],
-): JobsBillableSummary {
+): JobsBillableStat {
   const jobsBillable = jobIds.map((jobId) => jobsBillableById[jobId])
     .filter((jobBillable) => jobBillable !== undefined);
-  const jobsBillableSum: Record<string, { sumDurationMs: number }> = {};
-  for (const billable of jobsBillable) {
-    jobsBillableSum[billable.runner] = jobsBillableSum[billable.runner] ??
-      { sumDurationMs: 0 };
-    jobsBillableSum[billable.runner].sumDurationMs += billable.duration_ms;
+  const jobsBIllableGroup = Object.groupBy(
+    jobsBillable,
+    (billable) => billable.runner,
+  );
+  const summary: JobsBillableStat = {};
+  for (const runner of Object.keys(jobsBIllableGroup)) {
+    const durationSecs = jobsBIllableGroup[runner]!.map((billable) =>
+      billable.duration_ms / 1000
+    );
+    summary[runner] = createDurationStat(durationSecs);
   }
-  return jobsBillableSum;
+  return summary;
 }
