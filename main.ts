@@ -3,8 +3,8 @@ import {
   createJobsSummary,
   createRunsSummary,
 } from "./src/workflow_summariser.ts";
-import { reportCacheList } from "./src/rules/cache.ts";
-import { reportActiveCache } from "./src/rules/reportActiveCache.ts";
+import { reportCacheList } from "./src/rules/cache_list.ts";
+import { reportActiveCache } from "./src/rules/cache_active_size.ts";
 import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
 import { reportWorkflowCount } from "./src/rules/workflow_count_stat.ts";
 import { reportWorkflowRetryRuns } from "./src/rules/workflow_retry_runs.ts";

@@ -1,6 +1,12 @@
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
 import { JobsSummary } from "../workflow_summariser.ts";
 
+const meta = {
+  ruleId: "actions-scanner/step_action_checkout_depth0",
+  ruleUrl: undefined,
+  fixable: true,
+};
+
 const THRESHOLD_DURATION_SEC = 30;
 
 // stepsSummary.durationStatSecsが一定以上 && actions/checkoutを使っていてdepth:0の場合はfilter:blob:noneを推奨する
@@ -32,5 +38,16 @@ export function checkCheckoutFilterBlobNone(jobsSummary: JobsSummary) {
       return step;
     });
 
-  return reportedSteps;
+  // TODO: 配列で返すようにする
+  return {
+    ...meta,
+    severity: "warn",
+    messages: reportedSteps.map((step) =>
+      `actions/checkout with 'fetch-depth: 0' is slow. It takes p90 ${step.durationStatSecs.p90} sec`
+    ),
+    helpMessage: reportedSteps.map((step) => {
+      return `Recommend to use 'with.filter: blob:none': ${step.stepModel?.raw}`;
+    }),
+    data: reportedSteps,
+  };
 }

@@ -1,6 +1,12 @@
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
 import { JobsSummary } from "../workflow_summariser.ts";
 
+const meta = {
+  ruleId: "actions-scanner/step_old_action_artifact",
+  ruleUrl: undefined,
+  fixable: true,
+};
+
 const THRESHOLD_DURATION_SEC = 60;
 const THRESHOLD_VERSION = "v3";
 
@@ -34,6 +40,16 @@ export function checkSlowArtifactAction(jobsSummary: JobsSummary) {
       return step;
     });
 
-  // TODO:
-  return reportedSteps;
+  // TODO: 1回のスキャンで複数箇所が見つかるケースを考慮できていなかった。配列で返すようにする
+  return {
+    ...meta,
+    severity: "error",
+    messages: reportedSteps.map((step) =>
+      `Artifact action ${THRESHOLD_VERSION} is slow. It takes p90 ${step.durationStatSecs.p90} sec`
+    ),
+    helpMessage: reportedSteps.map((step) =>
+      `Recommend to update v4: ${step.stepModel?.raw}`
+    ).join("\n"),
+    data: reportedSteps,
+  };
 }

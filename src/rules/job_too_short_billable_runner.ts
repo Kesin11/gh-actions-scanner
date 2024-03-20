@@ -1,5 +1,11 @@
 import { JobsSummary } from "../workflow_summariser.ts";
 
+const meta = {
+  ruleId: "actions-scanner/job_too_short_billable_runner",
+  ruleUrl: undefined,
+  fixable: true,
+};
+
 // GitHub Actions charges per minutes.
 // https://docs.github.com/en/billing/managing-billing-for-github-actions/about-billing-for-github-actions
 const THRESHOLD_DURATION_SEC = 60;
@@ -30,5 +36,16 @@ export function checkTooShortBillableJob(jobsSummary: JobsSummary) {
     });
   });
 
-  return reportedJobs;
+  // TODO: 配列で返すようにする
+  return {
+    ...meta,
+    severity: "warn",
+    messages: reportedJobs.map((job) =>
+      `Job "${job.jobModel?.id}" median duration is shorter than minimum charge unit(${THRESHOLD_DURATION_SEC}sec)`
+    ),
+    helpMessage: reportedJobs.map((job) =>
+      `Recommend to composite to other jobs: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}"`
+    ),
+    data: reportedJobs,
+  };
 }
