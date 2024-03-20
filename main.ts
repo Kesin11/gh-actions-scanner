@@ -4,11 +4,9 @@ import {
   createRunsSummary,
 } from "./src/workflow_summariser.ts";
 import { reportActiveCache, reportCacheList } from "./src/rules/cache.ts";
-import {
-  reportWorkflowCount,
-  reportWorkflowRetryRuns,
-  reportWorkflowUsage,
-} from "./src/rules/workflow.ts";
+import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
+import { reportWorkflowCount } from "./src/rules/workflow_count_stat.ts";
+import { reportWorkflowRetryRuns } from "./src/rules/reportWorkflowRetryRuns.ts";
 import { WorkflowModel } from "./src/workflow_file.ts";
 import { checkSlowArtifactAction } from "./src/rules/artifact.ts";
 import { checkCheckoutFilterBlobNone } from "./src/rules/checkout.ts";
