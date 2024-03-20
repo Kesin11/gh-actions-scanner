@@ -12,7 +12,7 @@ const meta = {
 // deno-lint-ignore require-await
 export async function reportActiveCache(
   activeCache: ActionsCacheUsage,
-): Promise<RuleResult> {
+): Promise<RuleResult[]> {
   console.log("----Actions active cache----");
   const activeCacheSize =
     (activeCache.active_caches_size_in_bytes / 1000 / 1000 / 1000)
@@ -21,7 +21,7 @@ export async function reportActiveCache(
     `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
   );
 
-  return {
+  return [{
     ...meta,
     severity: (Number(activeCacheSize) > THRESHOLD_CACHE_SIZE_GB)
       ? "warn"
@@ -30,5 +30,5 @@ export async function reportActiveCache(
       `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
     ],
     data: activeCache,
-  };
+  }];
 }

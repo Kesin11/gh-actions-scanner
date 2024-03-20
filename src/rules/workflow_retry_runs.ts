@@ -1,5 +1,5 @@
 import type { RuleResult } from "./types.ts";
-import { RunsSummary } from "../workflow_summariser.ts";
+import type { RunsSummary } from "../workflow_summariser.ts";
 
 const meta = {
   ruleId: "actions-scanner/workflow_retry_runs",
@@ -10,7 +10,7 @@ const meta = {
 // deno-lint-ignore require-await
 export async function reportWorkflowRetryRuns(
   runsSummary: RunsSummary,
-): Promise<RuleResult> {
+): Promise<RuleResult[]> {
   const retriedRuns = runsSummary.filter((run) =>
     run.run_attemp && run.run_attemp > 1
   );
@@ -26,7 +26,7 @@ export async function reportWorkflowRetryRuns(
     }));
   }
 
-  return {
+  return [{
     ...meta,
     severity: "info",
     // TODO: メッセージにも各ワークフローが何回リトライされたかを表示する
@@ -40,5 +40,5 @@ export async function reportWorkflowRetryRuns(
         run_id: run.run_id,
       };
     }),
-  };
+  }];
 }

@@ -1,5 +1,6 @@
+import type { RuleResult } from "./types.ts";
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
-import { JobsSummary } from "../workflow_summariser.ts";
+import type { JobsSummary } from "../workflow_summariser.ts";
 
 const meta = {
   ruleId: "actions-scanner/step_old_action_artifact",
@@ -11,7 +12,10 @@ const THRESHOLD_DURATION_SEC = 60;
 const THRESHOLD_VERSION = "v3";
 
 // stepsSummary.durationStatSecsが一定以上 && actions/download-artifact@v3を使っている場合はv4を推奨する
-export function checkSlowArtifactAction(jobsSummary: JobsSummary) {
+// deno-lint-ignore require-await
+export async function checkSlowArtifactAction(
+  jobsSummary: JobsSummary,
+): Promise<RuleResult[]> {
   console.log("----checkSlowArtifactAction----");
   // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepsSummaryを抽出
   const artifactSteps = Object.values(jobsSummary).flatMap((jobs) => {
@@ -40,16 +44,15 @@ export function checkSlowArtifactAction(jobsSummary: JobsSummary) {
       return step;
     });
 
-  // TODO: 1回のスキャンで複数箇所が見つかるケースを考慮できていなかった。配列で返すようにする
-  return {
-    ...meta,
-    severity: "error",
-    messages: reportedSteps.map((step) =>
-      `Artifact action ${THRESHOLD_VERSION} is slow. It takes p90 ${step.durationStatSecs.p90} sec`
-    ),
-    helpMessage: reportedSteps.map((step) =>
-      `Recommend to update v4: ${step.stepModel?.raw}`
-    ).join("\n"),
-    data: reportedSteps,
-  };
+  return reportedSteps.map((step) => {
+    return {
+      ...meta,
+      severity: "error",
+      messages: [
+        `Artifact action ${THRESHOLD_VERSION} take a long time. It takes p90 ${step.durationStatSecs.p90} sec`,
+      ],
+      helpMessage: `Recommend to update v4: ${step.stepModel?.raw}`,
+      data: reportedSteps,
+    };
+  });
 }

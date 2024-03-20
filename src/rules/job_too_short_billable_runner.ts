@@ -1,4 +1,5 @@
-import { JobsSummary } from "../workflow_summariser.ts";
+import type { RuleResult } from "./types.ts";
+import type { JobsSummary } from "../workflow_summariser.ts";
 
 const meta = {
   ruleId: "actions-scanner/job_too_short_billable_runner",
@@ -16,7 +17,10 @@ function isLargerRunner(runner: string) {
 }
 
 // 課金対象のジョブが中央値で1min未満の場合はジョブの合併を提案する
-export function checkTooShortBillableJob(jobsSummary: JobsSummary) {
+// deno-lint-ignore require-await
+export async function checkTooShortBillableJob(
+  jobsSummary: JobsSummary,
+): Promise<RuleResult[]> {
   console.log("----checkTooShortBillableJob----");
 
   const reportedJobs = Object.values(jobsSummary).flatMap((jobs) => {
@@ -36,16 +40,16 @@ export function checkTooShortBillableJob(jobsSummary: JobsSummary) {
     });
   });
 
-  // TODO: 配列で返すようにする
-  return {
-    ...meta,
-    severity: "warn",
-    messages: reportedJobs.map((job) =>
-      `Job "${job.jobModel?.id}" median duration is shorter than minimum charge unit(${THRESHOLD_DURATION_SEC}sec)`
-    ),
-    helpMessage: reportedJobs.map((job) =>
-      `Recommend to composite to other jobs: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}"`
-    ),
-    data: reportedJobs,
-  };
+  return reportedJobs.map((job) => {
+    return {
+      ...meta,
+      severity: "warn",
+      messages: [
+        `Job "${job.jobModel?.id}" median duration is ${job.billableStatSecs.median}sec. It shorter than minimum charge unit(${THRESHOLD_DURATION_SEC}sec)`,
+      ],
+      helpMessage:
+        `Recommend to merge with other jobs: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}"`,
+      data: job,
+    };
+  });
 }

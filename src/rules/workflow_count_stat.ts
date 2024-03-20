@@ -10,7 +10,7 @@ const meta = {
 // deno-lint-ignore require-await
 export async function workflowCountStat(
   runsSummary: RunsSummary,
-): Promise<RuleResult> {
+): Promise<RuleResult[]> {
   console.log("----Workflow count----");
   const workflowCount: Record<string, number> = {};
   const runsByWorkflow = Object.groupBy(runsSummary, (run) => run.name);
@@ -20,12 +20,12 @@ export async function workflowCountStat(
     console.log(`${workflowName}: ${runs.length} runs`);
   }
 
-  return {
+  return [{
     ...meta,
     severity: "info",
     messages: Object.entries(workflowCount).map(([workflowName, count]) =>
       `${workflowName}: ${count} runs`
     ),
     data: workflowCount,
-  };
+  }];
 }
