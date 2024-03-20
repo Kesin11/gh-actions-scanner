@@ -11,17 +11,14 @@ const meta = {
 export async function reportCacheList(
   cacheList: ActionsCacheList,
 ): Promise<RuleResult[]> {
-  console.log(
-    `----Actions cache list (size top ${cacheList.actions_caches.length})----`,
-  );
   const topCacheList = cacheList.actions_caches.slice(0, 4);
-  console.debug(topCacheList.map((cache) => {
-    return {
-      ref: cache.ref,
-      key: cache.key,
-      size_in_bytes: cache.size_in_bytes,
-    };
-  }));
+  // console.debug(topCacheList.map((cache) => {
+  //   return {
+  //     ref: cache.ref,
+  //     key: cache.key,
+  //     size_in_bytes: cache.size_in_bytes,
+  //   };
+  // }));
 
   return [{
     ...meta,

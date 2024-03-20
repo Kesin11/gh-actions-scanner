@@ -21,35 +21,37 @@ function isLargerRunner(runner: string) {
 export async function checkTooShortBillableJob(
   jobsSummary: JobsSummary,
 ): Promise<RuleResult[]> {
-  console.log("----checkTooShortBillableJob----");
+  const reportedJobs = [];
+  for (const jobs of Object.values(jobsSummary)) {
+    for (const job of Object.values(jobs)) {
+      for (const [runner, stat] of Object.entries(job.billableStatSecs)) {
+        if (
+          stat.median && stat.median < THRESHOLD_DURATION_SEC &&
+          isLargerRunner(runner)
+        ) {
+          reportedJobs.push({ job, runner });
+        }
+      }
+    }
+  }
 
-  const reportedJobs = Object.values(jobsSummary).flatMap((jobs) => {
-    return Object.values(jobs).flatMap((job) => {
-      Object.entries(job.billableStatSecs).filter(
-        ([runner, stat]) => {
-          return (stat.median && stat.median < THRESHOLD_DURATION_SEC) &&
-            isLargerRunner(runner);
-        },
-      ).forEach(([runner, stat]) => {
-        console.warn(
-          `Job "${job.jobModel?.id}" median duration ${stat.median}s with runner "${runner}" is shorter than minimum charge unit(60s). Recommend to composite to other jobs.`,
-          `workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}"`,
-        );
-      });
-      return job; // NOTE: この返り値は使われていないので適当に返している
-    });
-  });
-
-  return reportedJobs.map((job) => {
+  return reportedJobs.map(({ job, runner }) => {
     return {
       ...meta,
       severity: "warn",
       messages: [
-        `Job "${job.jobModel?.id}" median duration is ${job.billableStatSecs.median}sec. It shorter than minimum charge unit(${THRESHOLD_DURATION_SEC}sec)`,
+        `workflow: "${job.workflowModel?.name}", job "${job.jobModel?.id}" median duration is ${
+          job.billableStatSecs[runner].median
+        }sec. It shorter than minimum charge unit(${THRESHOLD_DURATION_SEC}sec)`,
       ],
       helpMessage:
-        `Recommend to merge with other jobs: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}"`,
-      data: job,
+        `Recommend to merge with other jobs or using standard runner: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}", runner: ${runner}`,
+      data: {
+        workflow: job.workflowModel?.name,
+        job: job.jobModel?.id,
+        runner,
+        billableStatSecs: job.billableStatSecs[runner],
+      },
     };
   });
 }

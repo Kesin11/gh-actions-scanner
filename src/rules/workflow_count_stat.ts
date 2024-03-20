@@ -11,13 +11,11 @@ const meta = {
 export async function workflowCountStat(
   runsSummary: RunsSummary,
 ): Promise<RuleResult[]> {
-  console.log("----Workflow count----");
   const workflowCount: Record<string, number> = {};
   const runsByWorkflow = Object.groupBy(runsSummary, (run) => run.name);
   for (const workflowName of Object.keys(runsByWorkflow)) {
     const runs = runsByWorkflow[workflowName]!;
     workflowCount[workflowName] = runs.length;
-    console.log(`${workflowName}: ${runs.length} runs`);
   }
 
   return [{

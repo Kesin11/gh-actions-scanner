@@ -15,7 +15,6 @@ const THRESHOLD_DURATION_SEC = 30;
 export async function checkCheckoutFilterBlobNone(
   jobsSummary: JobsSummary,
 ): Promise<RuleResult[]> {
-  console.log("----checkCheckoutFilterBlobNone----");
   // 全てのjobを捜査してactions/checkoutを使っているstepsSummaryを抽出
   const checkoutSteps = Object.values(jobsSummary).flatMap((jobs) => {
     return Object.values(jobs).flatMap((job) => {
@@ -32,14 +31,7 @@ export async function checkCheckoutFilterBlobNone(
       step.durationStatSecs.p90 > THRESHOLD_DURATION_SEC);
   }).filter((step) => Number(step.stepModel?.raw.with?.["fetch-depth"]) === 0);
 
-  const reportedSteps = distinctBy(targetSteps, (step) => step.stepModel?.raw)
-    .map((step) => {
-      console.warn(
-        `actions/checkout with 'fetch-depth: 0' take a long time. Recommend to use 'with.filter: blob:none'`,
-        step.stepModel?.raw,
-      );
-      return step;
-    });
+  const reportedSteps = distinctBy(targetSteps, (step) => step.stepModel?.raw);
 
   return reportedSteps.map((step) => {
     return {

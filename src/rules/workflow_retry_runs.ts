@@ -14,17 +14,6 @@ export async function reportWorkflowRetryRuns(
   const retriedRuns = runsSummary.filter((run) =>
     run.run_attemp && run.run_attemp > 1
   );
-  console.log("----Retry runs----");
-  console.log(`${retriedRuns.length}/${runsSummary.length} runs are retried`);
-  if (retriedRuns.length !== 0) {
-    console.dir(retriedRuns.map((run) => {
-      return {
-        workflow_name: run.name,
-        attempt: run.run_attemp,
-        run_id: run.run_id,
-      };
-    }));
-  }
 
   return [{
     ...meta,

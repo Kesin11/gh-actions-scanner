@@ -13,13 +13,9 @@ const meta = {
 export async function reportActiveCache(
   activeCache: ActionsCacheUsage,
 ): Promise<RuleResult[]> {
-  console.log("----Actions active cache----");
   const activeCacheSize =
     (activeCache.active_caches_size_in_bytes / 1000 / 1000 / 1000)
       .toPrecision(2);
-  console.log(
-    `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
-  );
 
   return [{
     ...meta,

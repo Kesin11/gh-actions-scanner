@@ -20,14 +20,14 @@ const github = new Github();
 console.log(`owner: ${owner}, repo: ${repo}, perPage: ${perPage}`);
 const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
   .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
-console.dir(workflowRuns, { depth: null });
+// console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 
 // TODO: runを日付でソートして、workflow_idごとに最新のrunだけを残してfetchするのもを最小限にする
 // 日付だとブランチごとの最新を考慮できないが、それは実行時のオプションでブランチ指定などを追加してユーザーに任せる
 const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
-console.log(workflowFiles);
+// console.log(workflowFiles);
 const workflowModels = workflowFiles
   .filter((it) => it !== undefined)
   .map((fileContent) => new WorkflowModel(fileContent!));
@@ -38,24 +38,28 @@ const runsSummary = createRunsSummary(
   workflowModels,
 );
 console.log("----runsSummary----");
-console.dir(runsSummary, { depth: null });
+// console.dir(runsSummary, { depth: null });
 console.log("----jobsSummary----");
 const jobsSummary = createJobsSummary(
   runsSummary,
   workflowJobs,
   workflowModels,
 );
-console.dir(jobsSummary, { depth: null });
-
-await reportWorkflowRetryRuns(runsSummary);
-await workflowCountStat(runsSummary);
-await reportWorkflowUsage(runsSummary);
+// console.dir(jobsSummary, { depth: null });
 
 const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
 const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
-reportActiveCache(cacheUsage);
-reportCacheList(cacheList);
 
-checkSlowArtifactAction(jobsSummary);
-checkCheckoutFilterBlobNone(jobsSummary);
-checkTooShortBillableJob(jobsSummary);
+const result = [];
+result.push(await reportWorkflowRetryRuns(runsSummary));
+result.push(await workflowCountStat(runsSummary));
+result.push(await reportWorkflowUsage(runsSummary));
+
+result.push(await reportActiveCache(cacheUsage));
+result.push(await reportCacheList(cacheList));
+
+result.push(await checkSlowArtifactAction(jobsSummary));
+result.push(await checkCheckoutFilterBlobNone(jobsSummary));
+result.push(await checkTooShortBillableJob(jobsSummary));
+
+console.log(result);

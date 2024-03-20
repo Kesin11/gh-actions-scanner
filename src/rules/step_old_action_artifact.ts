@@ -16,7 +16,6 @@ const THRESHOLD_VERSION = "v3";
 export async function checkSlowArtifactAction(
   jobsSummary: JobsSummary,
 ): Promise<RuleResult[]> {
-  console.log("----checkSlowArtifactAction----");
   // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepsSummaryを抽出
   const artifactSteps = Object.values(jobsSummary).flatMap((jobs) => {
     return Object.values(jobs).flatMap((job) => {
@@ -35,14 +34,7 @@ export async function checkSlowArtifactAction(
   }).filter((step) => step.stepModel?.uses?.ref === THRESHOLD_VERSION);
 
   // TODO: refがハッシュ値だった場合はGitHubのAPIを使ってタグ名を取得してv4にアップデートを推奨する
-  const reportedSteps = distinctBy(targetSteps, (step) => step.stepModel?.raw)
-    .map((step) => {
-      console.warn(
-        `Artifact action ${THRESHOLD_VERSION} is slow. Recommend to update v4`,
-        step.stepModel?.raw,
-      );
-      return step;
-    });
+  const reportedSteps = distinctBy(targetSteps, (step) => step.stepModel?.raw);
 
   return reportedSteps.map((step) => {
     return {

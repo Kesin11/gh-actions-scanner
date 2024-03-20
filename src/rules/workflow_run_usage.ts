@@ -12,7 +12,6 @@ const meta = {
 export async function reportWorkflowUsage(
   runsSummary: RunsSummary,
 ): Promise<RuleResult[]> {
-  console.log("----Workflow sum of usage.run_duration ----");
   const workflowUsage: Record<string, number> = {};
   const runsByWorkflow = Object.groupBy(runsSummary, (run) => run.name);
   for (const workflowName of Object.keys(runsByWorkflow)) {
@@ -22,7 +21,6 @@ export async function reportWorkflowUsage(
       (run) => run.usage?.run_duration_ms ?? 0,
     );
     workflowUsage[workflowName] = sumRunDurationMs / 1000;
-    console.log(`${workflowName}: ${sumRunDurationMs / 1000}sec `);
   }
 
   return [{
