@@ -6,12 +6,12 @@ import {
 import { reportCacheList } from "./src/rules/cache_list.ts";
 import { reportActiveCache } from "./src/rules/cache_active_size.ts";
 import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
-import { reportWorkflowCount } from "./src/rules/workflow_count_stat.ts";
+import { workflowCountStat } from "./src/rules/workflow_count_stat.ts";
 import { reportWorkflowRetryRuns } from "./src/rules/workflow_retry_runs.ts";
 import { WorkflowModel } from "./src/workflow_file.ts";
-import { checkSlowArtifactAction } from "./src/rules/artifact.ts";
-import { checkCheckoutFilterBlobNone } from "./src/rules/checkout.ts";
-import { checkTooShortBillableJob } from "./src/rules/job.ts";
+import { checkSlowArtifactAction } from "./src/rules/step_old_action_artifact.ts";
+import { checkCheckoutFilterBlobNone } from "./src/rules/step_action_checkout_depth0.ts";
+import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
 
 const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
@@ -48,7 +48,7 @@ const jobsSummary = createJobsSummary(
 console.dir(jobsSummary, { depth: null });
 
 await reportWorkflowRetryRuns(runsSummary);
-await reportWorkflowCount(runsSummary);
+await workflowCountStat(runsSummary);
 await reportWorkflowUsage(runsSummary);
 
 const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
