@@ -25,7 +25,7 @@ export async function reportWorkflowUsage(
 
   return [{
     ...meta,
-    severity: "info",
+    severity: "low",
     messages: Object.entries(workflowUsage).map(([workflowName, duration]) =>
       `${workflowName}: ${duration} sec`
     ),

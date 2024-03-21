@@ -38,7 +38,7 @@ export async function checkTooShortBillableJob(
   return reportedJobs.map(({ job, runner }) => {
     return {
       ...meta,
-      severity: "warn",
+      severity: "medium",
       messages: [
         `workflow: "${job.workflowModel?.name}", job "${job.jobModel?.id}" median duration is ${
           job.billableStatSecs[runner].median

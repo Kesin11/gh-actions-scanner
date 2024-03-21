@@ -1,7 +1,7 @@
 export type RuleResult = {
   ruleId: string;
   ruleUrl?: string;
-  severity: "error" | "warn" | "info";
+  severity: "high" | "medium" | "low" | "unknown";
   fixable: boolean;
   messages: string[];
   helpMessage?: string;

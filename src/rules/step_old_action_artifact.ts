@@ -39,7 +39,7 @@ export async function checkSlowArtifactAction(
   return reportedSteps.map((step) => {
     return {
       ...meta,
-      severity: "error",
+      severity: "high",
       messages: [
         `Artifact action ${THRESHOLD_VERSION} take a long time. It takes p90 ${step.durationStatSecs.p90} sec`,
       ],

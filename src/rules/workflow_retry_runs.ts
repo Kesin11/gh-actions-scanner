@@ -17,7 +17,7 @@ export async function reportWorkflowRetryRuns(
 
   return [{
     ...meta,
-    severity: "info",
+    severity: "low",
     // TODO: メッセージにも各ワークフローが何回リトライされたかを表示する
     messages: [
       `${retriedRuns.length}/${runsSummary.length} runs are retried`,

@@ -20,8 +20,8 @@ export async function reportActiveCache(
   return [{
     ...meta,
     severity: (Number(activeCacheSize) > THRESHOLD_CACHE_SIZE_GB)
-      ? "warn"
-      : "info",
+      ? "medium"
+      : "low",
     messages: [
       `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
     ],

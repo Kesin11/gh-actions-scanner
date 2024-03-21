@@ -20,7 +20,7 @@ export async function workflowCountStat(
 
   return [{
     ...meta,
-    severity: "info",
+    severity: "low",
     messages: Object.entries(workflowCount).map(([workflowName, count]) =>
       `${workflowName}: ${count} runs`
     ),

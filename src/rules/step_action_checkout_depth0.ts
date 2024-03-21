@@ -36,7 +36,7 @@ export async function checkCheckoutFilterBlobNone(
   return reportedSteps.map((step) => {
     return {
       ...meta,
-      severity: "warn",
+      severity: "high",
       messages: [
         `actions/checkout with 'fetch-depth: 0' is slow. It takes p90 ${step.durationStatSecs.p90} sec`,
       ],
