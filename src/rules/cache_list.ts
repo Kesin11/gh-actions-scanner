@@ -22,6 +22,7 @@ export async function reportCacheList(
 
   return [{
     ...meta,
+    description: "Top 5 cache list",
     severity: "low",
     messages: topCacheList.map((cache) =>
       `${cache.ref}: ${cache.size_in_bytes}, key: ${cache.key}, size: ${cache.size_in_bytes} bytes`

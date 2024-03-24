@@ -5,7 +5,6 @@ const THRESHOLD_CACHE_SIZE_GB = 9;
 
 const meta = {
   ruleId: "actions-scanner/cache_active_size",
-  ruleUrl: undefined,
   fixable: false,
 };
 
@@ -22,6 +21,7 @@ export async function reportActiveCache(
     severity: (Number(activeCacheSize) > THRESHOLD_CACHE_SIZE_GB)
       ? "medium"
       : "low",
+    description: "Active cache size near reach to limit",
     messages: [
       `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
     ],
