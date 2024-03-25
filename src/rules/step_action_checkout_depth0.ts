@@ -44,6 +44,9 @@ export async function checkCheckoutFilterBlobNone(
       ],
       helpMessage: `Recommend to use 'with.filter: blob:none'`,
       code: (step.stepModel?.raw) ? stringify(step.stepModel?.raw) : undefined,
+      // TODO: こういうURLを表示させたい
+      // "https://github.com/kesin11-private/gh-actions-scanner/blob/45e430b56e6731eeb9ae9369de72802e9802bef9/.github/workflows/ci.yaml#L23-L25",
+      codeUrl: undefined,
       data: reportedSteps,
     };
   });
