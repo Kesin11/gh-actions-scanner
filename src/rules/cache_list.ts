@@ -22,10 +22,10 @@ export async function reportCacheList(
 
   return [{
     ...meta,
-    description: "Top 5 cache list",
+    description: "List Top 5 cache size",
     severity: "low",
     messages: topCacheList.map((cache) =>
-      `${cache.ref}: ${cache.size_in_bytes}, key: ${cache.key}, size: ${cache.size_in_bytes} bytes`
+      `${cache.ref}: key: ${cache.key}, size: ${cache.size_in_bytes} bytes`
     ),
     data: topCacheList,
   }];

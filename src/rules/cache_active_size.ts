@@ -21,7 +21,7 @@ export async function reportActiveCache(
     severity: (Number(activeCacheSize) > THRESHOLD_CACHE_SIZE_GB)
       ? "medium"
       : "low",
-    description: "Active cache size near reach to limit",
+    description: "List active cache size",
     messages: [
       `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
     ],

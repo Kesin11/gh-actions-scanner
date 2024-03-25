@@ -12,7 +12,7 @@ import { WorkflowModel } from "./src/workflow_file.ts";
 import { checkSlowArtifactAction } from "./src/rules/step_old_action_artifact.ts";
 import { checkCheckoutFilterBlobNone } from "./src/rules/step_action_checkout_depth0.ts";
 import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
-import { JsonFormatter } from "./src/formatter/formatter.ts";
+import { JsonFormatter, TableFormatter } from "./src/formatter/formatter.ts";
 
 const fullname = Deno.args[0];
 const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
@@ -65,7 +65,8 @@ result.push(await checkCheckoutFilterBlobNone(jobsSummary));
 result.push(await checkTooShortBillableJob(jobsSummary));
 
 // Format
-const formatedResult = new JsonFormatter().format(result.flat());
+// const formatedResult = new JsonFormatter().format(result.flat());
+const formatedResult = new TableFormatter().format(result.flat());
 
 // Output
 console.log(formatedResult);
