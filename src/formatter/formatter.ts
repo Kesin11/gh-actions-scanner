@@ -34,8 +34,13 @@ export class TableFormatter implements Formatter {
         joinRight: "",
       },
     };
-    return this.createTables(results).map((data) => table(data, tableConfig))
+    const resultTable = this.createTables(results).map((data) =>
+      table(data, tableConfig)
+    )
       .join("");
+    const totalString = this.createTotalText(results);
+
+    return `${resultTable}\n${totalString}`;
   }
 
   createSeverityText(severity: RuleResult["severity"]): string {
@@ -79,5 +84,16 @@ export class TableFormatter implements Formatter {
 
       return data;
     });
+  }
+
+  createTotalText(results: RuleResult[]): string {
+    const high = results.filter((result) => result.severity === "high").length;
+    const medium =
+      results.filter((result) => result.severity === "medium").length;
+    const low = results.filter((result) => result.severity === "low").length;
+    const unknown =
+      results.filter((result) => result.severity === "unknown").length;
+
+    return `Total: ${results.length} (HIGH: ${high}, MEDIUM: ${medium}, LOW: ${low}, UNKNOWN: ${unknown})`;
   }
 }
