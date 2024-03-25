@@ -20,6 +20,8 @@ export async function reportCacheList(
   //   };
   // }));
 
+  if (topCacheList.length === 0) return [];
+
   return [{
     ...meta,
     description: "List Top 5 cache size",
