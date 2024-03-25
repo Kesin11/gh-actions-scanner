@@ -18,11 +18,14 @@ export async function workflowCountStat(
     workflowCount[workflowName] = runs.length;
   }
 
+  const sortedCounts = Object.entries(workflowCount).sort((a, b) =>
+    b[1] - a[1]
+  );
   return [{
     ...meta,
     description: "Count of workflow runs",
     severity: "low",
-    messages: Object.entries(workflowCount).map(([workflowName, count]) =>
+    messages: sortedCounts.map(([workflowName, count]) =>
       `${workflowName}: ${count} runs`
     ),
     data: workflowCount,
