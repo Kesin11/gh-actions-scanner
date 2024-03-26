@@ -15,19 +15,26 @@ export async function reportWorkflowRetryRuns(
     run.run_attemp && run.run_attemp > 1
   );
 
+  if (retriedRuns.length === 0) return [];
+
+  const allGroup = Object.groupBy(runsSummary, (run) => run.name);
+  const retriedGroup = Object.groupBy(retriedRuns, (run) => run.name);
+
   return [{
     ...meta,
     description: "Count of each retried workflow runs",
     severity: "low",
-    // TODO: メッセージにも各ワークフローが何回リトライされたかを表示する
-    messages: [
-      `${retriedRuns.length}/${runsSummary.length} runs are retried`,
-    ],
+    messages: Object.entries(retriedGroup).map(([name, runs]) => {
+      return `${name}: ${runs!.length}/${
+        allGroup[name]!.length
+      } runs are retried.`;
+    }),
     data: retriedRuns.map((run) => {
       return {
         workflow_name: run.name,
         attempt: run.run_attemp,
         run_id: run.run_id,
+        // TODO: runのurlも出したい
       };
     }),
   }];
