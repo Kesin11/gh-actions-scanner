@@ -17,7 +17,7 @@ describe("cache_active_size", () => {
 
     it("Cache size is below the threshold", async () => {
       const activeCache = {
-        active_caches_size_in_bytes: 1_000_000_000,
+        active_caches_size_in_bytes: 1 * 1024 * 1024 * 1024,
       } as ActionsCacheUsage;
       const ruleResult = (await reportActiveCache(activeCache))[0];
       assertEquals(ruleResult.severity, "low");
@@ -30,8 +30,8 @@ describe("cache_active_size", () => {
 
     it("Cache size is over the threshold", async () => {
       const activeCache = {
-        active_caches_size_in_bytes: (THRESHOLD_CACHE_SIZE_GB * 1000 * 1000 *
-          1000),
+        active_caches_size_in_bytes: (THRESHOLD_CACHE_SIZE_GB * 1024 * 1024 *
+          1024),
       } as ActionsCacheUsage;
       const ruleResult = (await reportActiveCache(activeCache))[0];
       assertEquals(ruleResult.severity, "medium");

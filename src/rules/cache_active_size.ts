@@ -13,7 +13,7 @@ export async function reportActiveCache(
   activeCache: ActionsCacheUsage,
 ): Promise<RuleResult[]> {
   const activeCacheSize =
-    (activeCache.active_caches_size_in_bytes / 1000 / 1000 / 1000)
+    (activeCache.active_caches_size_in_bytes / 1024 / 1024 / 1024)
       .toPrecision(2);
 
   const ruleResult = (Number(activeCacheSize) >= THRESHOLD_CACHE_SIZE_GB)
