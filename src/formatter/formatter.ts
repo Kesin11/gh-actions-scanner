@@ -2,18 +2,39 @@ import type { RuleResult } from "../rules/types.ts";
 import chalk from "npm:chalk@5.3.0";
 import { getBorderCharacters, table, TableUserConfig } from "npm:table@6.8.1";
 
-interface Formatter {
+export const formatterList = ["json", "table"] as const;
+export type FormatterType = typeof formatterList[number];
+
+export class Formatter {
+  formatter: IFormatter;
+  constructor(formatter: typeof formatterList[number]) {
+    switch (formatter) {
+      case "json":
+        this.formatter = new JsonFormatter();
+        break;
+      case "table":
+        this.formatter = new TableFormatter();
+        break;
+    }
+  }
+
+  format(results: RuleResult[]): string {
+    return this.formatter.format(results);
+  }
+}
+
+interface IFormatter {
   format(results: RuleResult[]): string;
 }
 
-export class JsonFormatter implements Formatter {
+export class JsonFormatter implements IFormatter {
   constructor() {}
   format(results: RuleResult[]): string {
     return JSON.stringify(results, null, 2);
   }
 }
 
-export class TableFormatter implements Formatter {
+export class TableFormatter implements IFormatter {
   constructor() {}
   format(results: RuleResult[]): string {
     const tableConfig: TableUserConfig = {

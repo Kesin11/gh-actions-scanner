@@ -1,4 +1,7 @@
-import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
+import {
+  Command,
+  EnumType,
+} from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
 import { Github } from "./packages/github/github.ts";
 import {
   createJobsSummary,
@@ -13,9 +16,11 @@ import { WorkflowModel } from "./src/workflow_file.ts";
 import { checkSlowArtifactAction } from "./src/rules/step_old_action_artifact.ts";
 import { checkCheckoutFilterBlobNone } from "./src/rules/step_action_checkout_depth0.ts";
 import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
-import { JsonFormatter, TableFormatter } from "./src/formatter/formatter.ts";
+import { Formatter, formatterList } from "./src/formatter/formatter.ts";
+import type { FormatterType } from "./src/formatter/formatter.ts";
 
-const { options, args } = await new Command()
+const formatterType = new EnumType(formatterList);
+const { options, args: _args } = await new Command()
   .name("actions-scanner")
   .description(
     "Scan GitHub Actions workflows and report performance issues.",
@@ -42,6 +47,14 @@ const { options, args } = await new Command()
     "--host <host:string>",
     "GitHub host. Specify your GHES host If you will use it on GHES",
     { default: "github.com" },
+  )
+  .type("format", formatterType)
+  .option(
+    "-f, --format <name:format>",
+    `Formatter name. Default: "table". Available: ${formatterType.values()}`,
+    {
+      default: "table",
+    },
   )
   .parse(Deno.args);
 
@@ -96,8 +109,8 @@ result.push(await checkCheckoutFilterBlobNone(jobsSummary));
 result.push(await checkTooShortBillableJob(jobsSummary));
 
 // Format
-// const formatedResult = new JsonFormatter().format(result.flat());
-const formatedResult = new TableFormatter().format(result.flat());
+const formatter = new Formatter(options.format as FormatterType);
+const formatedResult = formatter.format(result.flat());
 
 // Output
 console.log(formatedResult);
