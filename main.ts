@@ -1,3 +1,4 @@
+import { Command } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
 import { Github } from "./packages/github/github.ts";
 import {
   createJobsSummary,
@@ -14,11 +15,41 @@ import { checkCheckoutFilterBlobNone } from "./src/rules/step_action_checkout_de
 import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
 import { JsonFormatter, TableFormatter } from "./src/formatter/formatter.ts";
 
-const fullname = Deno.args[0];
-const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
-const [owner, repo] = fullname.split("/");
+const { options, args } = await new Command()
+  .name("actions-scanner")
+  .description(
+    "Scan GitHub Actions workflows and report performance issues.",
+  )
+  .option("-t, --token <token:string>", "GitHub token. ex: $(gh auth token)", {
+    default: undefined,
+  })
+  .option(
+    "-R, --repo <repo_fullname:string>",
+    "Fullname of repository. OWNER/REPO format",
+    { required: true },
+  )
+  // .option("-L, --limit <limit:integer>", "Maximum number of runs to fetch", {
+  //   default: 20,
+  // })
+  .option(
+    "-p, --perpage <per_lage:integer>",
+    "Per page number of runs to fetch",
+    {
+      default: 20,
+    },
+  )
+  .option(
+    "--host <host:string>",
+    "GitHub host. Specify your GHES host If you will use it on GHES",
+    { default: "github.com" },
+  )
+  .parse(Deno.args);
+
+const [owner, repo] = options.repo.split("/");
+// const limit = options.limit;
+const perPage = options.perpage;
 const github = new Github();
-console.log(`owner: ${owner}, repo: ${repo}, perPage: ${perPage}`);
+console.log(`owner: ${owner}, repo: ${repo}, per_page: ${perPage}`);
 const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
   .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
 // console.dir(workflowRuns, { depth: null });
