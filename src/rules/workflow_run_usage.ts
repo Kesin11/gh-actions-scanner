@@ -23,10 +23,12 @@ export async function reportWorkflowUsage(
     workflowUsage[workflowName] = sumRunDurationMs / 1000;
   }
 
+  const sortedUsage = Object.entries(workflowUsage).sort((a, b) => b[1] - a[1]);
   return [{
     ...meta,
-    severity: "info",
-    messages: Object.entries(workflowUsage).map(([workflowName, duration]) =>
+    description: "Usage time of each workflow",
+    severity: "low",
+    messages: sortedUsage.map(([workflowName, duration]) =>
       `${workflowName}: ${duration} sec`
     ),
     data: workflowUsage,

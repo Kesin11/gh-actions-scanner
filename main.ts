@@ -1,3 +1,7 @@
+import {
+  Command,
+  EnumType,
+} from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
 import { Github } from "./packages/github/github.ts";
 import {
   createJobsSummary,
@@ -9,15 +13,57 @@ import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
 import { workflowCountStat } from "./src/rules/workflow_count_stat.ts";
 import { reportWorkflowRetryRuns } from "./src/rules/workflow_retry_runs.ts";
 import { WorkflowModel } from "./src/workflow_file.ts";
-import { checkSlowArtifactAction } from "./src/rules/step_old_action_artifact.ts";
-import { checkCheckoutFilterBlobNone } from "./src/rules/step_action_checkout_depth0.ts";
+import { checkSlowArtifactAction } from "./src/rules/step_actions_artifact_outdated.ts";
+import { checkCheckoutFilterBlobNone } from "./src/rules/step_actions_checkout_depth0.ts";
 import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
+import { Formatter, formatterList } from "./src/formatter/formatter.ts";
+import type { FormatterType } from "./src/formatter/formatter.ts";
 
-const fullname = Deno.args[0];
-const perPage = Deno.args[1] ? parseInt(Deno.args[1]) : 20; // gh run list もデフォルトでは20件表示
-const [owner, repo] = fullname.split("/");
+const formatterType = new EnumType(formatterList);
+const { options, args: _args } = await new Command()
+  .name("actions-scanner")
+  .description(
+    "Scan GitHub Actions workflows and report performance issues.",
+  )
+  .option("-t, --token <token:string>", "GitHub token. ex: $(gh auth token)", {
+    default: undefined,
+  })
+  .option(
+    "-R, --repo <repo_fullname:string>",
+    "Fullname of repository. OWNER/REPO format",
+    { required: true },
+  )
+  // TODO: packages/github.ts側でループしてfetchする機能実装後に有効化する
+  // .option("-L, --limit <limit:integer>", "Maximum number of runs to fetch", {
+  //   default: 20,
+  // })
+  .option(
+    "-p, --perpage <per_lage:integer>",
+    "Per page number of runs to fetch",
+    {
+      default: 20,
+    },
+  )
+  .option(
+    "--host <host:string>",
+    "GitHub host. Specify your GHES host If you will use it on GHES",
+    { default: "github.com" },
+  )
+  .type("format", formatterType)
+  .option(
+    "-f, --format <name:format>",
+    `Formatter name. Default: "table". Available: ${formatterType.values()}`,
+    {
+      default: "table",
+    },
+  )
+  .parse(Deno.args);
+
+const [owner, repo] = options.repo.split("/");
+// const limit = options.limit;
+const perPage = options.perpage;
 const github = new Github();
-console.log(`owner: ${owner}, repo: ${repo}, perPage: ${perPage}`);
+console.log(`owner: ${owner}, repo: ${repo}, per_page: ${perPage}`);
 const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
   .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
 // console.dir(workflowRuns, { depth: null });
@@ -50,6 +96,7 @@ const jobsSummary = createJobsSummary(
 const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
 const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
 
+// Scan
 const result = [];
 result.push(await reportWorkflowRetryRuns(runsSummary));
 result.push(await workflowCountStat(runsSummary));
@@ -62,4 +109,9 @@ result.push(await checkSlowArtifactAction(jobsSummary));
 result.push(await checkCheckoutFilterBlobNone(jobsSummary));
 result.push(await checkTooShortBillableJob(jobsSummary));
 
-console.log(result);
+// Format
+const formatter = new Formatter(options.format as FormatterType);
+const formatedResult = formatter.format(result.flat());
+
+// Output
+console.log(formatedResult);

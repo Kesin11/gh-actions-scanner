@@ -1,11 +1,10 @@
 import type { RuleResult } from "./types.ts";
 import type { ActionsCacheUsage } from "../../packages/github/github.ts";
 
-const THRESHOLD_CACHE_SIZE_GB = 9;
+export const THRESHOLD_CACHE_SIZE_GB = 9;
 
 const meta = {
   ruleId: "actions-scanner/cache_active_size",
-  ruleUrl: undefined,
   fixable: false,
 };
 
@@ -14,17 +13,45 @@ export async function reportActiveCache(
   activeCache: ActionsCacheUsage,
 ): Promise<RuleResult[]> {
   const activeCacheSize =
-    (activeCache.active_caches_size_in_bytes / 1000 / 1000 / 1000)
+    (activeCache.active_caches_size_in_bytes / 1024 / 1024 / 1024)
       .toPrecision(2);
 
-  return [{
+  const ruleResult = (Number(activeCacheSize) >= THRESHOLD_CACHE_SIZE_GB)
+    ? reportCacheReachLimit(activeCache, activeCacheSize)
+    : reportCache(activeCache, activeCacheSize);
+
+  return [ruleResult];
+}
+
+function reportCache(
+  activeCache: ActionsCacheUsage,
+  activeCacheSize: string,
+): RuleResult {
+  return {
     ...meta,
-    severity: (Number(activeCacheSize) > THRESHOLD_CACHE_SIZE_GB)
-      ? "warn"
-      : "info",
+    severity: "low",
+    description: "Show active cache size",
     messages: [
       `Active Cache size in bytes(GB): ${activeCacheSize} (MAX 10GB)`,
     ],
     data: activeCache,
-  }];
+  };
+}
+
+function reportCacheReachLimit(
+  activeCache: ActionsCacheUsage,
+  activeCacheSize: string,
+): RuleResult {
+  return {
+    ...meta,
+    severity: "medium",
+    description: "Cache size will soon reach its MAX limit",
+    messages: [
+      `Cache size will soon reach its MAX limit. It's using ${activeCacheSize}GB / 10GB`,
+      // TODO: こういうURLを表示させたい
+      // `See repository cache list. https://github.com/kesin11-private/gh-actions-scanner/actions/caches`
+    ],
+    helpMessage: `Recommend to reduce cache size.`,
+    data: activeCache,
+  };
 }

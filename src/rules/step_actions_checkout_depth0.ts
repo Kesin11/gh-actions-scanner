@@ -1,6 +1,7 @@
 import type { RuleResult } from "./types.ts";
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
 import type { JobsSummary } from "../workflow_summariser.ts";
+import { stringify } from "https://deno.land/std@0.212.0/yaml/stringify.ts";
 
 const meta = {
   ruleId: "actions-scanner/step_action_checkout_depth0",
@@ -36,12 +37,16 @@ export async function checkCheckoutFilterBlobNone(
   return reportedSteps.map((step) => {
     return {
       ...meta,
-      severity: "warn",
+      description: "actions/checkout with 'fetch-depth: 0' is slow",
+      severity: "high",
       messages: [
         `actions/checkout with 'fetch-depth: 0' is slow. It takes p90 ${step.durationStatSecs.p90} sec`,
       ],
-      helpMessage:
-        `Recommend to use 'with.filter: blob:none': ${step.stepModel?.raw}`,
+      helpMessage: `Recommend to use 'with.filter: blob:none'`,
+      code: (step.stepModel?.raw) ? stringify(step.stepModel?.raw) : undefined,
+      // TODO: こういうURLを表示させたい
+      // "https://github.com/kesin11-private/gh-actions-scanner/blob/45e430b56e6731eeb9ae9369de72802e9802bef9/.github/workflows/ci.yaml#L23-L25",
+      codeUrl: undefined,
       data: reportedSteps,
     };
   });

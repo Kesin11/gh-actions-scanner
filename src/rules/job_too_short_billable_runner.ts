@@ -38,14 +38,18 @@ export async function checkTooShortBillableJob(
   return reportedJobs.map(({ job, runner }) => {
     return {
       ...meta,
-      severity: "warn",
+      description: "Job time shorter than minimum charge unit 60sec",
+      severity: "medium",
       messages: [
         `workflow: "${job.workflowModel?.name}", job "${job.jobModel?.id}" median duration is ${
           job.billableStatSecs[runner].median
-        }sec. It shorter than minimum charge unit(${THRESHOLD_DURATION_SEC}sec)`,
+        }sec.`,
       ],
       helpMessage:
         `Recommend to merge with other jobs or using standard runner: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}", runner: ${runner}`,
+      // TODO: こういうURLを表示させたい
+      // "https://github.com/kesin11-private/gh-actions-scanner/blob/45e430b56e6731eeb9ae9369de72802e9802bef9/.github/workflows/ci.yaml#L23-L25",
+      codeUrl: undefined,
       data: {
         workflow: job.workflowModel?.name,
         job: job.jobModel?.id,

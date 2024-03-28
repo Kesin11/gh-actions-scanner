@@ -6,7 +6,7 @@ signal=0
 function run {
   repo=$1
   echo "Run ${repo}"
-  deno run -A main.ts $repo > /dev/null
+  deno run -A main.ts -R $repo > /dev/null
   signal=$(( $signal + $?))
 }
 run "Kesin11/CIAnalyzer"

@@ -20,11 +20,14 @@ export async function reportCacheList(
   //   };
   // }));
 
+  if (topCacheList.length === 0) return [];
+
   return [{
     ...meta,
-    severity: "info",
+    description: "List Top 5 cache size",
+    severity: "low",
     messages: topCacheList.map((cache) =>
-      `${cache.ref}: ${cache.size_in_bytes}, key: ${cache.key}, size: ${cache.size_in_bytes} bytes`
+      `${cache.ref}: key: ${cache.key}, size: ${cache.size_in_bytes} bytes`
     ),
     data: topCacheList,
   }];
