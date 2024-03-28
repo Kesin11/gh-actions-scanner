@@ -13,8 +13,8 @@ import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
 import { workflowCountStat } from "./src/rules/workflow_count_stat.ts";
 import { reportWorkflowRetryRuns } from "./src/rules/workflow_retry_runs.ts";
 import { WorkflowModel } from "./src/workflow_file.ts";
-import { checkSlowArtifactAction } from "./src/rules/step_old_action_artifact.ts";
-import { checkCheckoutFilterBlobNone } from "./src/rules/step_action_checkout_depth0.ts";
+import { checkSlowArtifactAction } from "./src/rules/step_actions_artifact_outdated.ts";
+import { checkCheckoutFilterBlobNone } from "./src/rules/step_actions_checkout_depth0.ts";
 import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
 import { Formatter, formatterList } from "./src/formatter/formatter.ts";
 import type { FormatterType } from "./src/formatter/formatter.ts";
@@ -33,6 +33,7 @@ const { options, args: _args } = await new Command()
     "Fullname of repository. OWNER/REPO format",
     { required: true },
   )
+  // TODO: packages/github.ts側でループしてfetchする機能実装後に有効化する
   // .option("-L, --limit <limit:integer>", "Maximum number of runs to fetch", {
   //   default: 20,
   // })
