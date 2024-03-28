@@ -18,8 +18,12 @@ import { checkCheckoutFilterBlobNone } from "./src/rules/step_actions_checkout_d
 import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
 import { Formatter, formatterList } from "./src/formatter/formatter.ts";
 import type { FormatterType } from "./src/formatter/formatter.ts";
+import { severityList } from "./src/rules/types.ts";
+import { filterSeverity } from "./src/rules_translator.ts";
+import { sortRules } from "./src/rules_translator.ts";
 
 const formatterType = new EnumType(formatterList);
+const severityType = new EnumType(severityList);
 const { options, args: _args } = await new Command()
   .name("actions-scanner")
   .description(
@@ -55,6 +59,15 @@ const { options, args: _args } = await new Command()
     `Formatter name. Default: "table". Available: ${formatterType.values()}`,
     {
       default: "table",
+    },
+  )
+  .type("severity", severityType)
+  .option(
+    "-s, --severity <items:severity[]>",
+    `Severities of filter result. Pass to camma separated string. Available: ${severityType.values()}`,
+    {
+      separator: ",",
+      default: severityType.values(),
     },
   )
   .parse(Deno.args);
@@ -97,7 +110,7 @@ const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
 const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
 
 // Scan
-const result = [];
+let result = [];
 result.push(await reportWorkflowRetryRuns(runsSummary));
 result.push(await workflowCountStat(runsSummary));
 result.push(await reportWorkflowUsage(runsSummary));
@@ -109,9 +122,12 @@ result.push(await checkSlowArtifactAction(jobsSummary));
 result.push(await checkCheckoutFilterBlobNone(jobsSummary));
 result.push(await checkTooShortBillableJob(jobsSummary));
 
+result = filterSeverity(result.flat(), options.severity);
+result = sortRules(result);
+
 // Format
 const formatter = new Formatter(options.format as FormatterType);
-const formatedResult = formatter.format(result.flat());
+const formatedResult = formatter.format(result);
 
 // Output
 console.log(formatedResult);
