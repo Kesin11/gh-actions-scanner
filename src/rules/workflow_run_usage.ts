@@ -1,6 +1,6 @@
 import { sumOf } from "https://deno.land/std@0.212.0/collections/sum_of.ts";
 import type { RuleResult } from "./types.ts";
-import type { RunsSummary } from "../workflow_summariser.ts";
+import type { RunSummary } from "../workflow_summariser.ts";
 
 const meta = {
   ruleId: "actions-scanner/workflow_run_usage",
@@ -10,7 +10,7 @@ const meta = {
 
 // deno-lint-ignore require-await
 export async function reportWorkflowUsage(
-  runsSummary: RunsSummary,
+  runsSummary: RunSummary[],
 ): Promise<RuleResult[]> {
   const workflowUsage: Record<string, number> = {};
   const runsByWorkflow = Object.groupBy(runsSummary, (run) => run.name);

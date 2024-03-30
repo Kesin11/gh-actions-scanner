@@ -1,6 +1,6 @@
 import type { RuleResult } from "./types.ts";
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
-import type { JobsSummary } from "../workflow_summariser.ts";
+import type { JobSummary } from "../workflow_summariser.ts";
 import { stringify } from "https://deno.land/std@0.212.0/yaml/stringify.ts";
 
 const meta = {
@@ -12,21 +12,24 @@ const meta = {
 const THRESHOLD_DURATION_SEC = 60;
 const THRESHOLD_VERSION = "v3";
 
-// stepsSummary.durationStatSecsが一定以上 && actions/download-artifact@v3を使っている場合はv4を推奨する
+// stepSummaries.durationStatSecsが一定以上 && actions/download-artifact@v3を使っている場合はv4を推奨する
 // deno-lint-ignore require-await
 export async function checkSlowArtifactAction(
-  jobsSummary: JobsSummary,
+  jobSummaries: JobSummary[],
 ): Promise<RuleResult[]> {
-  // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepsSummaryを抽出
-  const artifactSteps = Object.values(jobsSummary).flatMap((jobs) => {
-    return Object.values(jobs).flatMap((job) => {
-      return Object.values(job.stepsSummary).filter((step) => {
-        const action = step.stepModel?.uses?.action;
-        return action === "actions/upload-artifact" ||
-          action === "actions/download-artifact";
-      });
-    });
-  });
+  // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepSummariesを抽出
+  const artifactSteps = [];
+  for (const job of jobSummaries) {
+    for (const step of job.stepSummaries) {
+      const action = step.stepModel?.uses?.action;
+      if (
+        action === "actions/upload-artifact" ||
+        action === "actions/download-artifact"
+      ) {
+        artifactSteps.push(step);
+      }
+    }
+  }
 
   // その中でdurationStatSecs.p90が一定以上 && uses.refがv3のものを抽出
   const targetSteps = artifactSteps.filter((step) => {

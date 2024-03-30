@@ -14,7 +14,7 @@ type DurationStat = {
   max: number | undefined;
 };
 
-export type RunsSummary = {
+export type RunSummary = {
   name: string;
   display_title: string;
   conslusion: string | null;
@@ -26,14 +26,15 @@ export type RunsSummary = {
   repo: string;
   usage: WorkflowRunUsage | undefined;
   workflowModel: WorkflowModel;
-}[];
+};
 
-export type StepsSummary = Record<string, {
+export type StepSummary = {
+  name: string;
   count: number;
   successCount: number;
   durationStatSecs: DurationStat;
   stepModel: StepModel | undefined;
-}>;
+};
 
 function diffSec(
   start?: string | Date | null,
@@ -46,11 +47,11 @@ function diffSec(
   return (endDate.getTime() - startDate.getTime()) / 1000;
 }
 
-export function createRunsSummary(
+export function createRunSummaries(
   workflowRuns: WorkflowRun[],
   workflowRunUsages: WorkflowRunUsage[] | undefined,
   workflowModels: WorkflowModel[],
-): RunsSummary {
+): RunSummary[] {
   if (workflowRunUsages && workflowRuns.length !== workflowRunUsages.length) {
     throw new Error("workflowRuns.length !== workflowUsages.length");
   }
@@ -58,7 +59,7 @@ export function createRunsSummary(
     throw new Error("workflowRuns.length !== workflowModels.length");
   }
 
-  const runsSummary: RunsSummary = workflowRuns.map((run, i) => {
+  const runsSummary: RunSummary[] = workflowRuns.map((run, i) => {
     return {
       name: run.name!,
       owner: run.repository.owner.login,
@@ -77,18 +78,17 @@ export function createRunsSummary(
   return runsSummary;
 }
 type RunnerType = string;
-export type JobsSummary = Record<
-  string,
-  Record<string, {
-    count: number;
-    successCount: number;
-    durationStatSecs: DurationStat;
-    billableStatSecs: Record<RunnerType, DurationStat>;
-    stepsSummary: StepsSummary;
-    workflowModel: WorkflowModel | undefined;
-    jobModel: JobModel | undefined;
-  }>
->;
+export type JobSummary = {
+  workflowName: string;
+  jobNameOrId: string;
+  count: number;
+  successCount: number;
+  durationStatSecs: DurationStat;
+  billableStatSecs: Record<RunnerType, DurationStat>;
+  stepSummaries: StepSummary[];
+  workflowModel: WorkflowModel | undefined;
+  jobModel: JobModel | undefined;
+};
 function createDurationStat(durations: number[]): DurationStat {
   const isEmpty = durations.length === 0;
   return {
@@ -100,13 +100,13 @@ function createDurationStat(durations: number[]): DurationStat {
   };
 }
 
-export function createJobsSummary(
-  runsSummary: RunsSummary,
+export function createJobSummaries(
+  runSummaries: RunSummary[],
   workflowJobs: WorkflowJobs,
   workflowModels: WorkflowModel[],
-): JobsSummary {
+): JobSummary[] {
   const jobsBillableSummary = createJobsBillableById(
-    runsSummary.map((run) => run.usage),
+    runSummaries.map((run) => run.usage),
   );
 
   // TODO: 関数にまとめるかクラス化するか後で考える
@@ -125,7 +125,7 @@ export function createJobsSummary(
   );
   const workflowModelMap = WorkflowModel.createWorkflowNameMap(workflowModels);
 
-  const jobsSummary: JobsSummary = {};
+  const jobSummaries: JobSummary[] = [];
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
     if (jobs === undefined) throw new Error("jobs is undefined");
 
@@ -139,8 +139,9 @@ export function createJobsSummary(
       const durationSecs = successJobs.map((job) => job.durationSec);
       const jobModel = JobModel.match(workflowJobModels, jobNameOrId);
 
-      jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
-      jobsSummary[workflowName][jobNameOrId] = {
+      jobSummaries.push({
+        workflowName,
+        jobNameOrId,
         count: jobs.length,
         successCount: successJobs.length,
         durationStatSecs: createDurationStat(durationSecs),
@@ -148,23 +149,23 @@ export function createJobsSummary(
           jobsBillableSummary,
           jobs.map((job) => job.id),
         ),
-        stepsSummary: createStepsSummary(jobs, jobModel),
+        stepSummaries: createStepSummaries(jobs, jobModel),
         workflowModel: workflowModelMap.get(workflowName),
         jobModel,
-      };
+      });
     }
   }
-  return jobsSummary;
+  return jobSummaries;
 }
-function createStepsSummary(
+function createStepSummaries(
   workflowJobs: WorkflowJobs,
   jobModel?: JobModel,
-): StepsSummary {
+): StepSummary[] {
   const steps = workflowJobs.map((job) => job.steps ?? []).flat();
   const stepsGroup = Object.groupBy(steps, (step) => step.name);
   const stepModels = jobModel?.steps;
 
-  const stepsSummary: StepsSummary = {};
+  const stepSummaries: StepSummary[] = [];
   for (const [stepName, steps] of Object.entries(stepsGroup)) {
     if (steps === undefined) throw new Error("steps is undefined");
 
@@ -172,15 +173,16 @@ function createStepsSummary(
     const durationSecs = successSteps.map((step) =>
       diffSec(step.started_at, step.completed_at)
     );
-    stepsSummary[stepName] = {
+    stepSummaries.push({
       // TODO:  後でソートするためにnumberを入れたいが、順序が変わっている可能性もあるのでmaxを入れておく
+      name: stepName,
       count: steps.length,
       successCount: successSteps.length,
       durationStatSecs: createDurationStat(durationSecs),
       stepModel: StepModel.match(stepModels, stepName),
-    };
+    });
   }
-  return stepsSummary;
+  return stepSummaries;
 }
 
 // Example:

@@ -37,9 +37,13 @@ export class JsonFormatter implements IFormatter {
 export class TableFormatter implements IFormatter {
   constructor() {}
   format(results: RuleResult[]): string {
+    const CONSOLE_PADDING = 2;
+    const DEFAULT_COLUMN_WIDTH = 150;
     const tableConfig: TableUserConfig = {
       columnDefault: {
-        width: 150,
+        width: Deno.env.get("CI")
+          ? DEFAULT_COLUMN_WIDTH
+          : Deno.consoleSize().columns - CONSOLE_PADDING,
       },
       border: {
         ...getBorderCharacters("honeywell"),
