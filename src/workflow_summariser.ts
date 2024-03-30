@@ -28,12 +28,13 @@ export type RunsSummary = {
   workflowModel: WorkflowModel;
 }[];
 
-export type StepsSummary = Record<string, {
+export type StepsSummary = {
+  name: string;
   count: number;
   successCount: number;
   durationStatSecs: DurationStat;
   stepModel: StepModel | undefined;
-}>;
+}[];
 
 function diffSec(
   start?: string | Date | null,
@@ -164,7 +165,7 @@ function createStepsSummary(
   const stepsGroup = Object.groupBy(steps, (step) => step.name);
   const stepModels = jobModel?.steps;
 
-  const stepsSummary: StepsSummary = {};
+  const stepsSummary: StepsSummary = [];
   for (const [stepName, steps] of Object.entries(stepsGroup)) {
     if (steps === undefined) throw new Error("steps is undefined");
 
@@ -172,13 +173,14 @@ function createStepsSummary(
     const durationSecs = successSteps.map((step) =>
       diffSec(step.started_at, step.completed_at)
     );
-    stepsSummary[stepName] = {
+    stepsSummary.push({
       // TODO:  後でソートするためにnumberを入れたいが、順序が変わっている可能性もあるのでmaxを入れておく
+      name: stepName,
       count: steps.length,
       successCount: successSteps.length,
       durationStatSecs: createDurationStat(durationSecs),
       stepModel: StepModel.match(stepModels, stepName),
-    };
+    });
   }
   return stepsSummary;
 }

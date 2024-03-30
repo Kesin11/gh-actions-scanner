@@ -20,7 +20,7 @@ export async function checkSlowArtifactAction(
   // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepsSummaryを抽出
   const artifactSteps = [];
   for (const job of jobsSummary) {
-    for (const step of Object.values(job.stepsSummary)) {
+    for (const step of job.stepsSummary) {
       const action = step.stepModel?.uses?.action;
       if (
         action === "actions/upload-artifact" ||

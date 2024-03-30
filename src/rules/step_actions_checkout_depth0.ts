@@ -19,7 +19,7 @@ export async function checkCheckoutFilterBlobNone(
   // 全てのjobを捜査してactions/checkoutを使っているstepsSummaryを抽出
   const checkoutSteps = [];
   for (const job of jobsSummary) {
-    for (const step of Object.values(job.stepsSummary)) {
+    for (const step of job.stepsSummary) {
       if (step.stepModel?.uses?.action === "actions/checkout") {
         checkoutSteps.push(step);
       }
