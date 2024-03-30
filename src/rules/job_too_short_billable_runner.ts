@@ -22,15 +22,13 @@ export async function checkTooShortBillableJob(
   jobsSummary: JobsSummary,
 ): Promise<RuleResult[]> {
   const reportedJobs = [];
-  for (const jobs of Object.values(jobsSummary)) {
-    for (const job of Object.values(jobs)) {
-      for (const [runner, stat] of Object.entries(job.billableStatSecs)) {
-        if (
-          stat.median && stat.median < THRESHOLD_DURATION_SEC &&
-          isLargerRunner(runner)
-        ) {
-          reportedJobs.push({ job, runner });
-        }
+  for (const job of jobsSummary) {
+    for (const [runner, stat] of Object.entries(job.billableStatSecs)) {
+      if (
+        stat.median && stat.median < THRESHOLD_DURATION_SEC &&
+        isLargerRunner(runner)
+      ) {
+        reportedJobs.push({ job, runner });
       }
     }
   }

@@ -18,15 +18,18 @@ export async function checkSlowArtifactAction(
   jobsSummary: JobsSummary,
 ): Promise<RuleResult[]> {
   // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepsSummaryを抽出
-  const artifactSteps = Object.values(jobsSummary).flatMap((jobs) => {
-    return Object.values(jobs).flatMap((job) => {
-      return Object.values(job.stepsSummary).filter((step) => {
-        const action = step.stepModel?.uses?.action;
-        return action === "actions/upload-artifact" ||
-          action === "actions/download-artifact";
-      });
-    });
-  });
+  const artifactSteps = [];
+  for (const job of jobsSummary) {
+    for (const step of Object.values(job.stepsSummary)) {
+      const action = step.stepModel?.uses?.action;
+      if (
+        action === "actions/upload-artifact" ||
+        action === "actions/download-artifact"
+      ) {
+        artifactSteps.push(step);
+      }
+    }
+  }
 
   // その中でdurationStatSecs.p90が一定以上 && uses.refがv3のものを抽出
   const targetSteps = artifactSteps.filter((step) => {

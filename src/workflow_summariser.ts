@@ -77,18 +77,17 @@ export function createRunsSummary(
   return runsSummary;
 }
 type RunnerType = string;
-export type JobsSummary = Record<
-  string,
-  Record<string, {
-    count: number;
-    successCount: number;
-    durationStatSecs: DurationStat;
-    billableStatSecs: Record<RunnerType, DurationStat>;
-    stepsSummary: StepsSummary;
-    workflowModel: WorkflowModel | undefined;
-    jobModel: JobModel | undefined;
-  }>
->;
+export type JobsSummary = {
+  workflowName: string;
+  jobNameOrId: string;
+  count: number;
+  successCount: number;
+  durationStatSecs: DurationStat;
+  billableStatSecs: Record<RunnerType, DurationStat>;
+  stepsSummary: StepsSummary;
+  workflowModel: WorkflowModel | undefined;
+  jobModel: JobModel | undefined;
+}[];
 function createDurationStat(durations: number[]): DurationStat {
   const isEmpty = durations.length === 0;
   return {
@@ -125,7 +124,7 @@ export function createJobsSummary(
   );
   const workflowModelMap = WorkflowModel.createWorkflowNameMap(workflowModels);
 
-  const jobsSummary: JobsSummary = {};
+  const jobsSummary: JobsSummary = [];
   for (const [workflowName, jobs] of Object.entries(jobsWorkflowGroup)) {
     if (jobs === undefined) throw new Error("jobs is undefined");
 
@@ -139,8 +138,9 @@ export function createJobsSummary(
       const durationSecs = successJobs.map((job) => job.durationSec);
       const jobModel = JobModel.match(workflowJobModels, jobNameOrId);
 
-      jobsSummary[workflowName] = jobsSummary[workflowName] ?? {};
-      jobsSummary[workflowName][jobNameOrId] = {
+      jobsSummary.push({
+        workflowName,
+        jobNameOrId,
         count: jobs.length,
         successCount: successJobs.length,
         durationStatSecs: createDurationStat(durationSecs),
@@ -151,7 +151,7 @@ export function createJobsSummary(
         stepsSummary: createStepsSummary(jobs, jobModel),
         workflowModel: workflowModelMap.get(workflowName),
         jobModel,
-      };
+      });
     }
   }
   return jobsSummary;

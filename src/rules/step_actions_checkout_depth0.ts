@@ -17,14 +17,14 @@ export async function checkCheckoutFilterBlobNone(
   jobsSummary: JobsSummary,
 ): Promise<RuleResult[]> {
   // 全てのjobを捜査してactions/checkoutを使っているstepsSummaryを抽出
-  const checkoutSteps = Object.values(jobsSummary).flatMap((jobs) => {
-    return Object.values(jobs).flatMap((job) => {
-      return Object.values(job.stepsSummary).filter((step) => {
-        const action = step.stepModel?.uses?.action;
-        return action === "actions/checkout";
-      });
-    });
-  });
+  const checkoutSteps = [];
+  for (const job of jobsSummary) {
+    for (const step of Object.values(job.stepsSummary)) {
+      if (step.stepModel?.uses?.action === "actions/checkout") {
+        checkoutSteps.push(step);
+      }
+    }
+  }
 
   // その中でdurationStatSecs.p90がTHRESHOLD_DURATION_SEC以上 && uses.with.depth === "0"のものを抽出
   const targetSteps = checkoutSteps.filter((step) => {
