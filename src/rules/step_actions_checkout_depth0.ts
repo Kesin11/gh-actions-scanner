@@ -1,6 +1,6 @@
 import type { RuleResult } from "./types.ts";
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
-import type { JobsSummary } from "../workflow_summariser.ts";
+import type { JobSummary } from "../workflow_summariser.ts";
 import { stringify } from "https://deno.land/std@0.212.0/yaml/stringify.ts";
 
 const meta = {
@@ -11,15 +11,15 @@ const meta = {
 
 const THRESHOLD_DURATION_SEC = 30;
 
-// stepsSummary.durationStatSecsが一定以上 && actions/checkoutを使っていてdepth:0の場合はfilter:blob:noneを推奨する
+// stepSummaries.durationStatSecsが一定以上 && actions/checkoutを使っていてdepth:0の場合はfilter:blob:noneを推奨する
 // deno-lint-ignore require-await
 export async function checkCheckoutFilterBlobNone(
-  jobsSummary: JobsSummary,
+  jobSummaries: JobSummary[],
 ): Promise<RuleResult[]> {
-  // 全てのjobを捜査してactions/checkoutを使っているstepsSummaryを抽出
+  // 全てのjobを捜査してactions/checkoutを使っているstepSummariesを抽出
   const checkoutSteps = [];
-  for (const job of jobsSummary) {
-    for (const step of job.stepsSummary) {
+  for (const job of jobSummaries) {
+    for (const step of job.stepSummaries) {
       if (step.stepModel?.uses?.action === "actions/checkout") {
         checkoutSteps.push(step);
       }

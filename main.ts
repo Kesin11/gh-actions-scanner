@@ -4,8 +4,8 @@ import {
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
 import { Github } from "./packages/github/github.ts";
 import {
-  createJobsSummary,
-  createRunsSummary,
+  createJobSummaries,
+  createRunSummaries,
 } from "./src/workflow_summariser.ts";
 import { reportCacheList } from "./src/rules/cache_list.ts";
 import { reportActiveCache } from "./src/rules/cache_active_size.ts";
@@ -91,36 +91,34 @@ const workflowModels = workflowFiles
   .filter((it) => it !== undefined)
   .map((fileContent) => new WorkflowModel(fileContent!));
 
-const runsSummary = createRunsSummary(
+const runSummaries = createRunSummaries(
   workflowRuns,
   workflowRunUsages,
   workflowModels,
 );
-console.log("----runsSummary----");
-// console.dir(runsSummary, { depth: null });
-console.log("----jobsSummary----");
-const jobsSummary = createJobsSummary(
-  runsSummary,
+// console.dir(runSummaries, { depth: null });
+const jobSummaries = createJobSummaries(
+  runSummaries,
   workflowJobs,
   workflowModels,
 );
-// console.dir(jobsSummary, { depth: null });
+// console.dir(jobSummaries, { depth: null });
 
 const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
 const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
 
 // Scan
 let result = [];
-result.push(await reportWorkflowRetryRuns(runsSummary));
-result.push(await workflowCountStat(runsSummary));
-result.push(await reportWorkflowUsage(runsSummary));
+result.push(await reportWorkflowRetryRuns(runSummaries));
+result.push(await workflowCountStat(runSummaries));
+result.push(await reportWorkflowUsage(runSummaries));
 
 result.push(await reportActiveCache(cacheUsage));
 result.push(await reportCacheList(cacheList));
 
-result.push(await checkSlowArtifactAction(jobsSummary));
-result.push(await checkCheckoutFilterBlobNone(jobsSummary));
-result.push(await checkTooShortBillableJob(jobsSummary));
+result.push(await checkSlowArtifactAction(jobSummaries));
+result.push(await checkCheckoutFilterBlobNone(jobSummaries));
+result.push(await checkTooShortBillableJob(jobSummaries));
 
 result = filterSeverity(result.flat(), options.severity);
 result = sortRules(result);

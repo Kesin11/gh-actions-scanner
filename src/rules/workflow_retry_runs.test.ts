@@ -5,7 +5,7 @@ import {
   it,
 } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { reportWorkflowRetryRuns } from "./workflow_retry_runs.ts";
-import { type RunsSummary } from "../workflow_summariser.ts";
+import { type RunSummary } from "../workflow_summariser.ts";
 
 describe("workflow_retry_runs", () => {
   describe(reportWorkflowRetryRuns.name, () => {
@@ -19,7 +19,7 @@ describe("workflow_retry_runs", () => {
           run_attemp: 1,
           run_id: 1,
         },
-      ] as RunsSummary;
+      ] as RunSummary[];
       const actual = await reportWorkflowRetryRuns(runsSummary);
       assertEquals(
         actual,
@@ -44,7 +44,7 @@ describe("workflow_retry_runs", () => {
           run_attemp: 1,
           run_id: 2,
         },
-      ] as RunsSummary;
+      ] as RunSummary[];
       const actual = await reportWorkflowRetryRuns(runsSummary);
       assertEquals(
         actual[0].messages,
