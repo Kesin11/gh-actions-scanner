@@ -1,5 +1,9 @@
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
-import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
+import {
+  JobModel,
+  StepModel,
+  WorkflowModel,
+} from "../packages/workflow_model/workflow_file.ts";
 import {
   WorkflowJobs,
   WorkflowRun,

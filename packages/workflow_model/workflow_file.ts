@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
-import { FileContent } from "../packages/github/github.ts";
+import { FileContent } from "../github/github.ts";
 
 type Workflow = {
   name?: string;
