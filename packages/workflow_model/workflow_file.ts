@@ -1,5 +1,5 @@
 import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
-import { FileContent } from "../packages/github/github.ts";
+import { FileContent } from "../github/github.ts";
 
 type Workflow = {
   name?: string;
@@ -12,8 +12,10 @@ export class WorkflowModel {
   // id: string
   fileContent: FileContent;
   raw: Workflow;
+  htmlUrl?: string;
   constructor(fileContent: FileContent) {
     this.fileContent = fileContent;
+    this.htmlUrl = fileContent.raw.html_url ?? undefined;
     this.raw = parse(fileContent.content) as Workflow;
   }
 
@@ -34,7 +36,7 @@ export class WorkflowModel {
 
   get jobs(): JobModel[] {
     return Object.entries(this.raw.jobs).map(([id, job]) =>
-      new JobModel(id, job)
+      new JobModel(id, job, this.fileContent)
     );
   }
 }
@@ -54,15 +56,19 @@ export class JobModel {
   id: string;
   name?: string;
   raw: Job;
-  constructor(id: string, obj: Job) {
+  fileContent: FileContent;
+  htmlUrl?: string;
+  constructor(id: string, obj: Job, fileContent: FileContent) {
     this.id = id;
     this.name = obj.name;
     this.raw = obj;
+    this.fileContent = fileContent;
+    this.htmlUrl = fileContent.raw.html_url ?? undefined;
   }
 
   get steps(): StepModel[] {
     if (this.raw.steps === undefined) return [];
-    return this.raw.steps?.map((step) => new StepModel(step));
+    return this.raw.steps?.map((step) => new StepModel(step, this.fileContent));
   }
 
   static match(
@@ -119,12 +125,14 @@ export class StepModel {
     action: string;
     ref?: string;
   };
-  constructor(obj: Step) {
+  htmlUrl?: string;
+  constructor(obj: Step, fileContent: FileContent) {
     this.raw = obj;
     this.uses = obj.uses
       ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] }
       : undefined;
     this.name = obj.name ?? obj.run ?? this.uses?.action ?? "";
+    this.htmlUrl = fileContent.raw.html_url ?? undefined;
   }
 
   static match(

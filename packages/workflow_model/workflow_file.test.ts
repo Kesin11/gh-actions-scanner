@@ -1,12 +1,9 @@
 import { assertEquals } from "https://deno.land/std@0.212.0/assert/mod.ts";
 import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { JobModel, StepModel, WorkflowModel } from "./workflow_file.ts";
-import { FileContent } from "../packages/github/github.ts";
+import { FileContent } from "../github/github.ts";
 
-Deno.test(WorkflowModel.name, async (t) => {
-  // before的なものを書きたければここに
-  // 無理そうならtddのモジュールを持ってくる
-  const yaml = `
+const dummyWorkflow = `
 name: CI
 on:
   push:
@@ -24,17 +21,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
   `;
-  const fileContentDummy = {
-    raw: undefined,
-    content: yaml,
-  } as unknown as FileContent;
+const fileContentDummy = {
+  raw: {
+    url: "https://github.com/owner/repo/blob/main/.github/workflows/dummy.yml",
+  },
+  content: dummyWorkflow,
+} as unknown as FileContent;
+
+describe(WorkflowModel.name, () => {
   const workflowModel = new WorkflowModel(fileContentDummy);
 
-  await t.step("this.obj.name", () => {
+  it("this.obj.name", () => {
     assertEquals(workflowModel.raw.name, "CI");
   });
 
-  await t.step("jobs", () => {
+  it("jobs", () => {
     const actual = workflowModel.jobs;
     assertEquals(actual.length, 2);
     assertEquals(actual[0].id, "test1");
@@ -50,7 +51,7 @@ describe(JobModel.name, () => {
       { uses: "actions/checkout@v4" },
       { name: "Echo", run: "echo 'Hello, world!'" },
     ],
-  });
+  }, fileContentDummy);
 
   it("isReusable", () => {
     assertEquals(base.isReusable(), false);
@@ -74,7 +75,7 @@ describe(JobModel.name, () => {
           },
         },
         steps: [],
-      });
+      }, fileContentDummy);
 
       assertEquals(matrixJob.isMatrix(), true);
     });
@@ -87,7 +88,7 @@ describe(JobModel.name, () => {
       const expectJob = new JobModel(id, {
         "runs-on": "ubuntu-latest",
         steps: [],
-      });
+      }, fileContentDummy);
 
       const actual = JobModel.match([base, expectJob], apiResponseName);
       assertEquals(actual, expectJob);
@@ -100,7 +101,7 @@ describe(JobModel.name, () => {
         "runs-on": "ubuntu-latest",
         "name": "named_test1",
         steps: [],
-      });
+      }, fileContentDummy);
 
       const actual = JobModel.match([base, expectJob], apiResponseName);
       assertEquals(actual, expectJob);
@@ -117,7 +118,7 @@ describe(JobModel.name, () => {
           },
         },
         steps: [],
-      });
+      }, fileContentDummy);
 
       const actual = JobModel.match([base, expectJob], apiResponseName);
       assertEquals(actual, expectJob);
@@ -136,7 +137,7 @@ describe(JobModel.name, () => {
           },
           name: "test2: node ${{ matrix.node }}",
           steps: [],
-        });
+        }, fileContentDummy);
 
         const actual = JobModel.match([base, expectJob], apiResponseName);
         assertEquals(actual, expectJob);
@@ -155,7 +156,7 @@ describe(JobModel.name, () => {
           },
           name: "test2: node ${{ matrix.node }}, os ${{ matrix.os }}",
           steps: [],
-        });
+        }, fileContentDummy);
 
         const actual = JobModel.match([base, expectJob], apiResponseName);
         assertEquals(actual, expectJob);
@@ -167,14 +168,17 @@ describe(JobModel.name, () => {
 describe(StepModel.name, () => {
   describe("this.uses", () => {
     it("actions/checkout@v4: ref is version tag", () => {
-      const stepModel = new StepModel({ uses: "actions/checkout@v4" });
+      const stepModel = new StepModel(
+        { uses: "actions/checkout@v4" },
+        fileContentDummy,
+      );
       assertEquals(stepModel.uses, { action: "actions/checkout", ref: "v4" });
     });
 
     it("actions/checkout@v4: ref is commit hash", () => {
       const stepModel = new StepModel({
         uses: "actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.uses, {
         action: "actions/checkout",
         ref: "b4ffde65f46336ab88eb53be808477a3936bae11",
@@ -184,7 +188,7 @@ describe(StepModel.name, () => {
     it("./.github/actions/composite: Composite action", () => {
       const stepModel = new StepModel({
         uses: "./.github/acitons/composite",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.uses, {
         action: "./.github/acitons/composite",
         ref: undefined,
@@ -196,7 +200,7 @@ describe(StepModel.name, () => {
     it("Only uses is defined", () => {
       const stepModel = new StepModel({
         uses: "actions/checkout@v4",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.name, "actions/checkout");
     });
 
@@ -204,14 +208,14 @@ describe(StepModel.name, () => {
       const stepModel = new StepModel({
         uses: "actions/checkout@v4",
         name: "Checkout",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.name, "Checkout");
     });
 
     it("Only run is defined", () => {
       const stepModel = new StepModel({
         run: "echo 'Hello, world!'",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.name, "echo 'Hello, world!'");
     });
 
@@ -219,39 +223,51 @@ describe(StepModel.name, () => {
       const stepModel = new StepModel({
         run: "echo 'Hello, world!'",
         name: "Echo",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.name, "Echo");
     });
 
     it("Composite action", () => {
       const stepModel = new StepModel({
         uses: "./.github/acitons/composite",
-      });
+      }, fileContentDummy);
       assertEquals(stepModel.name, "./.github/acitons/composite");
     });
   });
 
   describe("match", () => {
-    const preStep = new StepModel({ uses: "dummy/pre-step@v1" });
+    const preStep = new StepModel(
+      { uses: "dummy/pre-step@v1" },
+      fileContentDummy,
+    );
     const namedPreStep = new StepModel({
       uses: "dummy/pre-step@v1",
       name: "Pre-step",
-    });
-    const postStep = new StepModel({ uses: "Kesin11/actions-timeline@v2" });
+    }, fileContentDummy);
+    const postStep = new StepModel(
+      { uses: "Kesin11/actions-timeline@v2" },
+      fileContentDummy,
+    );
     const namedPostStep = new StepModel({
       uses: "Kesin11/actions-timeline@v2",
       name: "Actions-timeline",
-    });
-    const planeStep = new StepModel({ uses: "actions/checkout@v4" });
+    }, fileContentDummy);
+    const planeStep = new StepModel(
+      { uses: "actions/checkout@v4" },
+      fileContentDummy,
+    );
     const namedPlaneStep = new StepModel({
       uses: "actions/checkout@v4",
       name: "Checkout",
-    });
-    const runStep = new StepModel({ run: "echo 'Hello, world!'" });
+    }, fileContentDummy);
+    const runStep = new StepModel(
+      { run: "echo 'Hello, world!'" },
+      fileContentDummy,
+    );
     const namedRunStep = new StepModel({
       run: "echo 'Hello, world!'",
       name: "Echo",
-    });
+    }, fileContentDummy);
     const stepModels = [
       preStep,
       namedPreStep,
