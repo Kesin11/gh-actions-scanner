@@ -47,7 +47,7 @@ export async function checkTooShortBillableJob(
         `Recommend to merge with other jobs or using standard runner: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}", runner: ${runner}`,
       // TODO: こういうURLを表示させたい
       // "https://github.com/kesin11-private/gh-actions-scanner/blob/45e430b56e6731eeb9ae9369de72802e9802bef9/.github/workflows/ci.yaml#L23-L25",
-      codeUrl: undefined,
+      codeUrl: job.workflowModel?.htmlUrl,
       data: {
         workflow: job.workflowModel?.name,
         job: job.jobModel?.id,
