@@ -1,5 +1,14 @@
 import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
+import { zip } from "https://deno.land/std@0.218.2/collections/zip.ts";
+import {
+  safeLoad,
+  type YamlMap,
+  type YAMLMapping,
+} from "npm:yaml-ast-parser@0.0.43";
+import { StructuredSource } from "npm:structured-source@4.0.0";
 import { FileContent } from "../github/github.ts";
+
+type SourceLines = [number, number]; // [start, end]
 
 type Workflow = {
   name?: string;
@@ -12,9 +21,13 @@ export class WorkflowModel {
   // id: string
   fileContent: FileContent;
   raw: Workflow;
+  ast: YamlMap;
+  src: StructuredSource;
   htmlUrl?: string;
   constructor(fileContent: FileContent) {
     this.fileContent = fileContent;
+    this.ast = safeLoad(fileContent.content) as YamlMap; // rootは確定でYamlMap型
+    this.src = new StructuredSource(fileContent.content);
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
     this.raw = parse(fileContent.content) as Workflow;
   }
@@ -35,8 +48,9 @@ export class WorkflowModel {
   }
 
   get jobs(): JobModel[] {
-    return Object.entries(this.raw.jobs).map(([id, job]) =>
-      new JobModel(id, job, this.fileContent)
+    return zip(Object.entries(this.raw.jobs), this.ast.mappings).map(
+      ([[id, job], jobAst]) =>
+        new JobModel(id, job, this.fileContent, jobAst, this.src),
     );
   }
 }
@@ -55,20 +69,50 @@ export type Job = {
 export class JobModel {
   id: string;
   name?: string;
-  raw: Job;
   fileContent: FileContent;
+  raw: Job;
+  ast: YAMLMapping;
+  src: StructuredSource;
   htmlUrl?: string;
-  constructor(id: string, obj: Job, fileContent: FileContent) {
+  constructor(
+    id: string,
+    obj: Job,
+    fileContent: FileContent,
+    jobAst: YAMLMapping,
+    src: StructuredSource,
+  ) {
     this.id = id;
     this.name = obj.name;
     this.raw = obj;
+    this.ast = jobAst;
+    this.src = src;
     this.fileContent = fileContent;
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
   }
 
+  get lines(): SourceLines {
+    const loc = this.src.rangeToLocation([
+      this.ast.key.startPosition,
+      this.ast.value.endPosition,
+    ]);
+    return [loc.start.line, loc.end.line];
+  }
+
   get steps(): StepModel[] {
     if (this.raw.steps === undefined) return [];
-    return this.raw.steps?.map((step) => new StepModel(step, this.fileContent));
+    // TODO: zipでthis.raw.stepsとASTのstepsを結びつけてStepModelを作成する
+    // ここではStructuredSourceを本来渡さずともlineだけ渡せるが、FileContentも渡しているので同様にして渡すことにする
+
+    const stepAst = this.ast.value.mappings.find((it: any) =>
+      it.key.value === "steps"
+    );
+    // TODO: ここはよく分からないので調査
+    return zip(this.raw.steps, stepAst.mappings).map(
+      ([step, stepAst]) =>
+        new StepModel(step, this.fileContent, stepAst as YAMLMapping, this.src),
+    );
+
+    return this.raw.steps.map((step) => new StepModel(step, this.fileContent));
   }
 
   static match(
@@ -125,14 +169,31 @@ export class StepModel {
     action: string;
     ref?: string;
   };
+  ast: YAMLMapping;
+  src: StructuredSource;
   htmlUrl?: string;
-  constructor(obj: Step, fileContent: FileContent) {
+  constructor(
+    obj: Step,
+    fileContent: FileContent,
+    stepAst: YAMLMapping,
+    src: StructuredSource,
+  ) {
     this.raw = obj;
     this.uses = obj.uses
       ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] }
       : undefined;
     this.name = obj.name ?? obj.run ?? this.uses?.action ?? "";
+    this.ast = stepAst;
+    this.src = src;
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
+  }
+
+  get lines(): SourceLines {
+    const loc = this.src.rangeToLocation([
+      this.ast.key.startPosition,
+      this.ast.value.endPosition,
+    ]);
+    return [loc.start.line, loc.end.line];
   }
 
   static match(
