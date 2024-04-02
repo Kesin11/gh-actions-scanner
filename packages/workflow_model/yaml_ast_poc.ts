@@ -5,6 +5,7 @@ import {
   YAMLSequence,
 } from "npm:yaml-ast-parser@0.0.43";
 import { StructuredSource } from "npm:structured-source@4.0.0";
+import { WorkflowAst } from "./workflow_ast.ts";
 
 const yaml = Deno.readTextFileSync(".github/workflows/ci.yaml").toString();
 const root = safeLoad(yaml) as YamlMap; // rootは確定でYamlMap
@@ -36,3 +37,14 @@ steps.items.forEach((it) => {
   // 各stepの先頭の行番号を表示する
   console.log(src.rangeToLocation([it.startPosition, it.endPosition]));
 });
+
+console.log("----workflow_ast----");
+
+const workflowAst = new WorkflowAst(yaml);
+const jobAsts = workflowAst.jobAsts();
+console.log("----job_ast----");
+jobAsts.forEach((it) => console.log(it.lines()));
+
+console.log("----step_ast----");
+const stepAsts = jobAsts.flatMap((it) => it.stepAsts());
+stepAsts.forEach((it) => console.log(it.lines()));
