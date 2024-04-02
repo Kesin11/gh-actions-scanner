@@ -5,7 +5,7 @@ import {
   YAMLSequence,
 } from "npm:yaml-ast-parser@0.0.43";
 import { StructuredSource } from "npm:structured-source@4.0.0";
-import { WorkflowAst } from "./workflow_ast.ts";
+import { WorkflowAst } from "./src/workflow_ast.ts";
 
 const yaml = Deno.readTextFileSync(".github/workflows/ci.yaml").toString();
 const root = safeLoad(yaml) as YamlMap; // rootは確定でYamlMap
