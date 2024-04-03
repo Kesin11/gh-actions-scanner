@@ -1,0 +1,48 @@
+name: Fixture WorkflowAst
+
+jobs:
+  deno:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v1.x
+      - id: fmt
+        run: deno fmt --check
+      - id: lint
+        run: deno lint
+      - id: test
+        run: deno test -A
+        
+  use_matrix:
+    strategy:
+      fail-fast: false
+      matrix:
+        job:
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+          - os: macos-14
+            target: x86_64-apple-darwin
+    name: Build ${{ matrix.job.target }}
+    runs-on: ${{ matrix.job.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup rust build target
+        run: rustup target add ${{ matrix.job.target }}
+      - name: Build
+        run: |
+          cargo build --release --target ${{ matrix.job.target }}
+
+  use_composite:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-deno-with-cache
+      - id: fmt
+        run: deno fmt --check
+
+  use_reusable:
+    uses: ./.github/workflows/reusable_callable.yml
+    with:
+      foo: "Call bar"

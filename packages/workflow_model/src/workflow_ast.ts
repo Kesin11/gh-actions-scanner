@@ -1,4 +1,5 @@
 import {
+  load,
   safeLoad,
   type YamlMap,
   type YAMLMapping,
@@ -12,7 +13,7 @@ export class WorkflowAst {
   ast: YamlMap;
   src: StructuredSource;
   constructor(yaml: string) {
-    this.ast = safeLoad(yaml) as YamlMap; // rootは確定でYamlMap型
+    this.ast = load(yaml) as YamlMap; // rootは確定でYamlMap型
     this.src = new StructuredSource(yaml);
   }
 
@@ -39,9 +40,22 @@ export class JobAst {
   }
 
   lines(): SourceLines {
+    // MEMO: StructuredSourceの方は改行が文字数カウントに含まれているので+1されていて、最初が0から始まるので
+    // ASTのendから見ると2文字ずれてる？
+
+    // stepAstの方は一見合っているので、最後のstepのendPositionを使ってみる
+    const jobMap = this.ast.value as YamlMap;
+    const stepsSeq = jobMap.mappings.find((it) => it.key.value === "steps")
+      ?.value as YAMLSequence; // stepsは必ず存在し確定でYAMLSequence;
+    const finalStepAst = new StepAst(
+      stepsSeq.items.at(-1)! as YAMLMapping,
+      this.src,
+    );
+
     const loc = this.src.rangeToLocation([
       this.ast.startPosition,
-      this.ast.endPosition,
+      finalStepAst.ast.endPosition,
+      // this.ast.endPosition,
     ]);
     return [loc.start.line, loc.end.line];
   }
