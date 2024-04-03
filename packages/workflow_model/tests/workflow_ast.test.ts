@@ -8,7 +8,6 @@ import { JobAst, StepAst, WorkflowAst } from "../src/workflow_ast.ts";
 
 // TODO
 // - reusableで動くこと
-// - yamlにマルチバイト文字が含まれていても動くこと
 
 describe("workflow_ast.yaml", () => {
   const fixture = Deno.readTextFileSync(
@@ -71,7 +70,7 @@ describe("workflow_ast.yaml", () => {
 
 describe("ci.yaml", () => {
   const fixture = Deno.readTextFileSync(
-    join(import.meta.dirname!, "./fixtures/ci.yaml"),
+    join(import.meta.dirname!, "./fixtures/multi_byte.yaml"),
   );
   const workflowAst = new WorkflowAst(fixture);
 
@@ -92,7 +91,7 @@ describe("ci.yaml", () => {
 
       it("my_repo_test", () => {
         const ast = jobsAsts[1];
-        assertEquals(ast.startLine(), 33);
+        assertEquals(ast.startLine(), 34);
       });
     });
   });
@@ -102,11 +101,11 @@ describe("ci.yaml", () => {
     const stepAsts = jobsAst.stepAsts();
     it("my_repo_test one line", () => {
       const ast = stepAsts[0];
-      assertEquals(ast.startLine(), 37);
+      assertEquals(ast.startLine(), 39);
     });
     it("my_repo_test multi line", () => {
       const ast = stepAsts[1];
-      assertEquals(ast.startLine(), 38);
+      assertEquals(ast.startLine(), 40);
     });
   });
 });

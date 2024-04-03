@@ -1,4 +1,4 @@
-name: CI
+name: マルチバイト文字が含まれていてもstartLineが正しく取得できるか
 
 on:
   push:
@@ -12,6 +12,7 @@ permissions:
 
 jobs:
   check:
+    name: チェックジョブ
     timeout-minutes: 5
     runs-on: [cloudrun]
     steps:
@@ -31,6 +32,7 @@ jobs:
       - id: test
         run: deno test -A
   my_repo_test:
+    name: 複数の自分のリポジトリに対して完走できるかテスト
     timeout-minutes: 5
     runs-on: [cloudrun]
     steps:
