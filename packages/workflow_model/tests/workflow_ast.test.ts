@@ -24,7 +24,7 @@ describe("workflow_ast.yaml", () => {
   describe(JobAst.name, () => {
     const jobsAsts = workflowAst.jobAsts();
 
-    describe("lines()", () => {
+    describe("startLine()", () => {
       it("deno", () => {
         const ast = jobsAsts[0];
         assertEquals(ast.startLine(), 4);
@@ -50,20 +50,22 @@ describe("workflow_ast.yaml", () => {
   describe(StepAst.name, () => {
     const jobsAst = workflowAst.jobAsts().at(0)!;
     const stepAsts = jobsAst.stepAsts();
-    it("one line", () => {
-      const ast = stepAsts[0];
-      assertEquals(ast.startLine(), 7);
-    });
-    it("multi line", () => {
-      const ast = stepAsts[1];
-      assertEquals(ast.startLine(), 8);
-    });
+    describe("startLine()", () => {
+      it("one line", () => {
+        const ast = stepAsts[0];
+        assertEquals(ast.startLine(), 7);
+      });
+      it("multi line", () => {
+        const ast = stepAsts[1];
+        assertEquals(ast.startLine(), 8);
+      });
 
-    it("use_composite multi line", () => {
-      const jobsAst = workflowAst.jobAsts().at(2)!;
-      const stepAsts = jobsAst.stepAsts();
-      const ast = stepAsts[2];
-      assertEquals(ast.startLine(), 42);
+      it("use_composite multi line", () => {
+        const jobsAst = workflowAst.jobAsts().at(2)!;
+        const stepAsts = jobsAst.stepAsts();
+        const ast = stepAsts[2];
+        assertEquals(ast.startLine(), 42);
+      });
     });
   });
 });
@@ -83,7 +85,7 @@ describe("ci.yaml", () => {
   describe(JobAst.name, () => {
     const jobsAsts = workflowAst.jobAsts();
 
-    describe("lines()", () => {
+    describe("startLine()", () => {
       it("check", () => {
         const ast = jobsAsts[0];
         assertEquals(ast.startLine(), 14);
@@ -99,13 +101,15 @@ describe("ci.yaml", () => {
   describe(StepAst.name, () => {
     const jobsAst = workflowAst.jobAsts().at(1)!;
     const stepAsts = jobsAst.stepAsts();
-    it("my_repo_test one line", () => {
-      const ast = stepAsts[0];
-      assertEquals(ast.startLine(), 39);
-    });
-    it("my_repo_test multi line", () => {
-      const ast = stepAsts[1];
-      assertEquals(ast.startLine(), 40);
+    describe("startLine()", () => {
+      it("my_repo_test one line", () => {
+        const ast = stepAsts[0];
+        assertEquals(ast.startLine(), 39);
+      });
+      it("my_repo_test multi line", () => {
+        const ast = stepAsts[1];
+        assertEquals(ast.startLine(), 40);
+      });
     });
   });
 });
