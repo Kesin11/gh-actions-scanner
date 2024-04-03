@@ -43,8 +43,8 @@ console.log("----workflow_ast----");
 const workflowAst = new WorkflowAst(yaml);
 const jobAsts = workflowAst.jobAsts();
 console.log("----job_ast----");
-jobAsts.forEach((it) => console.log(it.lines()));
+jobAsts.forEach((it) => console.log(it.startLine()));
 
 console.log("----step_ast----");
 const stepAsts = jobAsts.flatMap((it) => it.stepAsts());
-stepAsts.forEach((it) => console.log(it.lines()));
+stepAsts.forEach((it) => console.log(it.startLine()));

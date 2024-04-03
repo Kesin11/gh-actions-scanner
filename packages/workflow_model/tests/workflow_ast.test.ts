@@ -7,8 +7,6 @@ import { join } from "https://deno.land/std@0.221.0/path/mod.ts";
 import { JobAst, StepAst, WorkflowAst } from "../src/workflow_ast.ts";
 
 // TODO
-// - linesが正常に動いていること
-//   なぜかyaml-astとsrcで2文字ずれてる。pocのときには問題なかったので何が違うのか？
 // - reusableで動くこと
 // - yamlにマルチバイト文字が含まれていても動くこと
 
@@ -30,22 +28,22 @@ describe("workflow_ast.yaml", () => {
     describe("lines()", () => {
       it("deno", () => {
         const ast = jobsAsts[0];
-        assertEquals(ast.lines(), [4, 16]);
+        assertEquals(ast.startLine(), 4);
       });
 
       it("use_matrix", () => {
         const ast = jobsAsts[1];
-        assertEquals(ast.lines(), [18, 35]);
+        assertEquals(ast.startLine(), 18);
       });
 
       it("use_composite", () => {
         const ast = jobsAsts[2];
-        assertEquals(ast.lines(), [37, 43]);
+        assertEquals(ast.startLine(), 37);
       });
 
       it("use_reusable", () => {
         const ast = jobsAsts[3];
-        assertEquals(ast.lines(), [45, 48]);
+        assertEquals(ast.startLine(), 45);
       });
     });
   });
@@ -55,25 +53,25 @@ describe("workflow_ast.yaml", () => {
     const stepAsts = jobsAst.stepAsts();
     it("one line", () => {
       const ast = stepAsts[0];
-      assertEquals(ast.lines(), [7, 7]);
+      assertEquals(ast.startLine(), 7);
     });
     it("multi line", () => {
       const ast = stepAsts[1];
-      assertEquals(ast.lines(), [8, 10]);
+      assertEquals(ast.startLine(), 8);
     });
 
     it("use_composite multi line", () => {
       const jobsAst = workflowAst.jobAsts().at(2)!;
       const stepAsts = jobsAst.stepAsts();
       const ast = stepAsts[2];
-      assertEquals(ast.lines(), [42, 43]);
+      assertEquals(ast.startLine(), 42);
     });
   });
 });
 
 describe("ci.yaml", () => {
   const fixture = Deno.readTextFileSync(
-    join(import.meta.dirname!, "../../../.github/workflows/ci.yaml"),
+    join(import.meta.dirname!, "./fixtures/ci.yaml"),
   );
   const workflowAst = new WorkflowAst(fixture);
 
@@ -89,12 +87,12 @@ describe("ci.yaml", () => {
     describe("lines()", () => {
       it("check", () => {
         const ast = jobsAsts[0];
-        assertEquals(ast.lines(), [14, 32]);
+        assertEquals(ast.startLine(), 14);
       });
 
       it("my_repo_test", () => {
         const ast = jobsAsts[1];
-        assertEquals(ast.lines(), [33, 48]);
+        assertEquals(ast.startLine(), 33);
       });
     });
   });
@@ -104,11 +102,11 @@ describe("ci.yaml", () => {
     const stepAsts = jobsAst.stepAsts();
     it("my_repo_test one line", () => {
       const ast = stepAsts[0];
-      assertEquals(ast.lines(), [37, 37]);
+      assertEquals(ast.startLine(), 37);
     });
     it("my_repo_test multi line", () => {
       const ast = stepAsts[1];
-      assertEquals(ast.lines(), [38, 41]);
+      assertEquals(ast.startLine(), 38);
     });
   });
 });

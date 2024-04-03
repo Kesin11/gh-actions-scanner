@@ -80,7 +80,7 @@ export class JobModel {
   }
 
   get lines(): SourceLines {
-    return this.ast.lines();
+    return this.ast.startLine();
   }
 
   get steps(): StepModel[] {
@@ -162,7 +162,7 @@ export class StepModel {
   }
 
   get lines(): SourceLines {
-    return this.ast.lines();
+    return this.ast.startLine();
   }
 
   static match(
