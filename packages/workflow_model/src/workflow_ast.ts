@@ -29,10 +29,13 @@ export class JobAst {
     this.src = src;
   }
 
-  stepAsts(): StepAst[] {
+  stepAsts(): StepAst[] | undefined {
     const jobMap = this.ast.value as YamlMap;
+    // stepsが存在すればYAMLSequence, Reusable workflowはstepsが存在しないのでundefined
     const stepsSeq = jobMap.mappings.find((it) => it.key.value === "steps")
-      ?.value as YAMLSequence; // stepsは必ず存在し確定でYAMLSequence;
+      ?.value as YAMLSequence | undefined;
+    if (stepsSeq === undefined) return undefined;
+
     return stepsSeq.items.map((it) => new StepAst(it as YAMLMapping, this.src));
   }
 

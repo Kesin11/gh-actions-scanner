@@ -6,9 +6,6 @@ import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { join } from "https://deno.land/std@0.221.0/path/mod.ts";
 import { JobAst, StepAst, WorkflowAst } from "../src/workflow_ast.ts";
 
-// TODO
-// - reusableで動くこと
-
 describe("workflow_ast.yaml", () => {
   const fixture = Deno.readTextFileSync(
     join(import.meta.dirname!, "./fixtures/workflow_ast.yaml"),
@@ -23,6 +20,12 @@ describe("workflow_ast.yaml", () => {
 
   describe(JobAst.name, () => {
     const jobsAsts = workflowAst.jobAsts();
+    describe("stepAsts()", () => {
+      it("reusable workflow has not any steps", () => {
+        const ast = jobsAsts[3];
+        assertEquals(ast.stepAsts(), undefined);
+      });
+    });
 
     describe("startLine()", () => {
       it("deno", () => {
@@ -49,7 +52,7 @@ describe("workflow_ast.yaml", () => {
 
   describe(StepAst.name, () => {
     const jobsAst = workflowAst.jobAsts().at(0)!;
-    const stepAsts = jobsAst.stepAsts();
+    const stepAsts = jobsAst.stepAsts()!;
     describe("startLine()", () => {
       it("one line", () => {
         const ast = stepAsts[0];
@@ -62,7 +65,7 @@ describe("workflow_ast.yaml", () => {
 
       it("use_composite multi line", () => {
         const jobsAst = workflowAst.jobAsts().at(2)!;
-        const stepAsts = jobsAst.stepAsts();
+        const stepAsts = jobsAst.stepAsts()!;
         const ast = stepAsts[2];
         assertEquals(ast.startLine(), 42);
       });
@@ -100,7 +103,7 @@ describe("ci.yaml", () => {
 
   describe(StepAst.name, () => {
     const jobsAst = workflowAst.jobAsts().at(1)!;
-    const stepAsts = jobsAst.stepAsts();
+    const stepAsts = jobsAst.stepAsts()!;
     describe("startLine()", () => {
       it("my_repo_test one line", () => {
         const ast = stepAsts[0];
