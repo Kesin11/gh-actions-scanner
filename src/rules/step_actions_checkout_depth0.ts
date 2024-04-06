@@ -30,7 +30,9 @@ export async function checkCheckoutFilterBlobNone(
   const targetSteps = checkoutSteps.filter((step) => {
     return (step.durationStatSecs.p90 &&
       step.durationStatSecs.p90 > THRESHOLD_DURATION_SEC);
-  }).filter((step) => Number(step.stepModel?.raw.with?.["fetch-depth"]) === 0);
+  }).filter((step) => Number(step.stepModel?.raw.with?.["fetch-depth"]) === 0)
+    // filterに"blob:none"などがセットされていればOK
+    .filter((step) => step.stepModel?.raw.with?.["filter"] === undefined);
 
   const reportedSteps = distinctBy(targetSteps, (step) => step.stepModel?.raw);
 
@@ -42,7 +44,8 @@ export async function checkCheckoutFilterBlobNone(
       messages: [
         `actions/checkout with 'fetch-depth: 0' is slow. It takes p90 ${step.durationStatSecs.p90} sec`,
       ],
-      helpMessage: `Recommend to use 'with.filter: blob:none'`,
+      helpMessage:
+        `Recommend to set depth >0 or using with 'filter' option. ex: 'filter: blob:none'`,
       code: (step.stepModel?.raw) ? stringify(step.stepModel?.raw) : undefined,
       codeUrl: step.stepModel?.htmlUrlWithLine,
       data: reportedSteps,

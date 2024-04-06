@@ -47,7 +47,7 @@ export async function checkSlowArtifactAction(
         "actions/upload-artifact@v3 and actions/downlowad-artifact@v3 are slower than v4",
       severity: "high",
       messages: [
-        `Artifact action ${THRESHOLD_VERSION} take a long time. It takes p90 ${step.durationStatSecs.p90} sec`,
+        `Artifact action ${THRESHOLD_VERSION} take a long time. It takes ${step.durationStatSecs.p90} secs at p90`,
       ],
       helpMessage: `Recommend to update v4`,
       code: (step.stepModel?.raw) ? stringify(step.stepModel?.raw) : undefined,

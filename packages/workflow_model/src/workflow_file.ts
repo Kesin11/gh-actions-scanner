@@ -134,6 +134,7 @@ export class JobModel {
   }
 }
 
+// TODO: ここはusesかrunでパターンが存在するので型をもうちょっとちゃんと書ける
 export type Step = {
   uses?: string;
   name?: string;
