@@ -1,0 +1,50 @@
+name: マルチバイト文字が含まれていてもstartLineが正しく取得できるか
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  check:
+    name: チェックジョブ
+    timeout-minutes: 5
+    runs-on: [cloudrun]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set .tool-versions to output
+        id: tool-versions
+        run: awk '{ print $1"="$2 }' .tool-versions >> $GITHUB_OUTPUT
+        shell: bash
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v${{ steps.tool-versions.outputs.deno }}
+
+      - id: fmt
+        run: deno fmt --check
+      - id: lint
+        run: deno lint
+      - id: test
+        run: deno test -A
+  my_repo_test:
+    name: 複数の自分のリポジトリに対して完走できるかテスト
+    timeout-minutes: 5
+    runs-on: [cloudrun]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set .tool-versions to output
+        id: tool-versions
+        run: awk '{ print $1"="$2 }' .tool-versions >> $GITHUB_OUTPUT
+        shell: bash
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: v${{ steps.tool-versions.outputs.deno }}
+      
+      - run: deno task my_repo_test
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_PAT }}

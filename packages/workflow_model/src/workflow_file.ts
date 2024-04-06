@@ -1,5 +1,7 @@
 import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
-import { FileContent } from "../github/github.ts";
+import { zip } from "https://deno.land/std@0.218.2/collections/zip.ts";
+import { FileContent } from "../../github/github.ts";
+import { JobAst, StepAst, WorkflowAst } from "./workflow_ast.ts";
 
 type Workflow = {
   name?: string;
@@ -12,9 +14,11 @@ export class WorkflowModel {
   // id: string
   fileContent: FileContent;
   raw: Workflow;
+  ast: WorkflowAst;
   htmlUrl?: string;
   constructor(fileContent: FileContent) {
     this.fileContent = fileContent;
+    this.ast = new WorkflowAst(fileContent.content);
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
     this.raw = parse(fileContent.content) as Workflow;
   }
@@ -35,8 +39,8 @@ export class WorkflowModel {
   }
 
   get jobs(): JobModel[] {
-    return Object.entries(this.raw.jobs).map(([id, job]) =>
-      new JobModel(id, job, this.fileContent)
+    return zip(Object.entries(this.raw.jobs), this.ast.jobAsts()).map(
+      ([[id, job], jobAst]) => new JobModel(id, job, this.fileContent, jobAst),
     );
   }
 }
@@ -55,20 +59,39 @@ export type Job = {
 export class JobModel {
   id: string;
   name?: string;
-  raw: Job;
   fileContent: FileContent;
+  raw: Job;
+  ast: JobAst;
   htmlUrl?: string;
-  constructor(id: string, obj: Job, fileContent: FileContent) {
+  constructor(
+    id: string,
+    obj: Job,
+    fileContent: FileContent,
+    ast: JobAst,
+  ) {
     this.id = id;
     this.name = obj.name;
     this.raw = obj;
+    this.ast = ast;
     this.fileContent = fileContent;
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
   }
 
+  get startLine(): number {
+    return this.ast.startLine();
+  }
+
+  get htmlUrlWithLine(): string {
+    return `${this.htmlUrl}#L${this.startLine}`;
+  }
+
   get steps(): StepModel[] {
-    if (this.raw.steps === undefined) return [];
-    return this.raw.steps?.map((step) => new StepModel(step, this.fileContent));
+    const stepAsts = this.ast.stepAsts();
+    if (this.raw.steps === undefined || stepAsts === undefined) return [];
+
+    return zip(this.raw.steps, stepAsts).map(
+      ([step, stepAst]) => new StepModel(step, this.fileContent, stepAst),
+    );
   }
 
   static match(
@@ -125,14 +148,28 @@ export class StepModel {
     action: string;
     ref?: string;
   };
+  ast: StepAst;
   htmlUrl?: string;
-  constructor(obj: Step, fileContent: FileContent) {
+  constructor(
+    obj: Step,
+    fileContent: FileContent,
+    ast: StepAst,
+  ) {
     this.raw = obj;
     this.uses = obj.uses
       ? { action: obj.uses.split("@")[0], ref: obj.uses.split("@")[1] }
       : undefined;
     this.name = obj.name ?? obj.run ?? this.uses?.action ?? "";
+    this.ast = ast;
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
+  }
+
+  get startLine(): number {
+    return this.ast.startLine();
+  }
+
+  get htmlUrlWithLine(): string {
+    return `${this.htmlUrl}#L${this.startLine}`;
   }
 
   static match(

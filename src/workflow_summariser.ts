@@ -3,7 +3,7 @@ import {
   JobModel,
   StepModel,
   WorkflowModel,
-} from "../packages/workflow_model/workflow_file.ts";
+} from "../packages/workflow_model/src/workflow_file.ts";
 import {
   WorkflowJobs,
   WorkflowRun,

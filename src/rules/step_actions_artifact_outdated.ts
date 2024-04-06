@@ -47,13 +47,11 @@ export async function checkSlowArtifactAction(
         "actions/upload-artifact@v3 and actions/downlowad-artifact@v3 are slower than v4",
       severity: "high",
       messages: [
-        `Artifact action ${THRESHOLD_VERSION} take a long time. It takes p90 ${step.durationStatSecs.p90} sec`,
+        `Artifact action ${THRESHOLD_VERSION} take a long time. It takes ${step.durationStatSecs.p90} secs at p90`,
       ],
       helpMessage: `Recommend to update v4`,
       code: (step.stepModel?.raw) ? stringify(step.stepModel?.raw) : undefined,
-      // TODO: こういうURLを表示させたい
-      // "https://github.com/kesin11-private/gh-actions-scanner/blob/45e430b56e6731eeb9ae9369de72802e9802bef9/.github/workflows/ci.yaml#L23-L25",
-      codeUrl: step.stepModel?.htmlUrl,
+      codeUrl: step.stepModel?.htmlUrlWithLine,
       data: reportedSteps,
     };
   });
