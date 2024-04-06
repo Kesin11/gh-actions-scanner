@@ -3,8 +3,6 @@ import { zip } from "https://deno.land/std@0.218.2/collections/zip.ts";
 import { FileContent } from "../../github/github.ts";
 import { JobAst, StepAst, WorkflowAst } from "./workflow_ast.ts";
 
-type SourceLines = [number, number]; // [start, end]
-
 type Workflow = {
   name?: string;
   jobs: {
@@ -79,14 +77,19 @@ export class JobModel {
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
   }
 
-  get lines(): SourceLines {
+  get startLine(): number {
     return this.ast.startLine();
   }
 
-  get steps(): StepModel[] {
-    if (this.raw.steps === undefined) return [];
+  get htmlUrlWithLine(): string {
+    return `${this.htmlUrl}#L${this.startLine}`;
+  }
 
-    return zip(this.raw.steps, this.ast.stepAsts()).map(
+  get steps(): StepModel[] {
+    const stepAsts = this.ast.stepAsts();
+    if (this.raw.steps === undefined || stepAsts === undefined) return [];
+
+    return zip(this.raw.steps, stepAsts).map(
       ([step, stepAst]) => new StepModel(step, this.fileContent, stepAst),
     );
   }
@@ -161,8 +164,12 @@ export class StepModel {
     this.htmlUrl = fileContent.raw.html_url ?? undefined;
   }
 
-  get lines(): SourceLines {
+  get startLine(): number {
     return this.ast.startLine();
+  }
+
+  get htmlUrlWithLine(): string {
+    return `${this.htmlUrl}#L${this.startLine}`;
   }
 
   static match(
