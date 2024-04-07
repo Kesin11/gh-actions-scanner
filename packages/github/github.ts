@@ -173,26 +173,25 @@ export class Github {
     const cache = this.contentCache.get(JSON.stringify(params));
     if (cache) return cache;
 
-    try {
-      const res = await this.octokit.repos.getContent({
-        owner: params.owner,
-        repo: params.repo,
-        path: params.path,
-        ref: params.ref,
-      });
-      // https://github.com/octokit/types.ts/issues/440#issuecomment-1221055881
-      if (!Array.isArray(res.data) && res.data.type === "file") {
-        const fetchedFileContent = new FileContent(res.data);
+    return this.octokit.repos.getContent({
+      owner: params.owner,
+      repo: params.repo,
+      path: params.path,
+      ref: params.ref,
+    })
+      .then((res) => {
+        if (!Array.isArray(res.data) && res.data.type === "file") {
+          const fetchedFileContent = new FileContent(res.data);
 
-        this.contentCache.set(JSON.stringify(params), fetchedFileContent);
-        return fetchedFileContent;
-      }
-    } catch (_error) {
-      console.debug(
-        `fetchContent: ${params.owner}/${params.repo}/${params.path}`,
-      );
-    }
-    // Unexpected response
-    return undefined;
+          this.contentCache.set(JSON.stringify(params), fetchedFileContent);
+          return fetchedFileContent;
+        }
+      })
+      .catch((_error) => {
+        console.debug(
+          `fetchContent: ${params.owner}/${params.repo}/${params.path}`,
+        );
+        return undefined;
+      });
   }
 }
