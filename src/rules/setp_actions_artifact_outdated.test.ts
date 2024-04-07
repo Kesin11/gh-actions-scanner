@@ -18,10 +18,8 @@ describe(filename, () => {
             p90: 60,
           },
           stepModel: {
-            uses: {
-              action: "actions/download-artifact",
-              ref: "v3",
-            },
+            uses: { action: "actions/download-artifact", ref: "v3" },
+            raw: { action: "actions/checkout@v3" },
           },
         }],
       }] as unknown as JobSummary[];
@@ -37,10 +35,8 @@ describe(filename, () => {
             p90: 61,
           },
           stepModel: {
-            uses: {
-              action: "actions/download-artifact",
-              ref: "v4",
-            },
+            uses: { action: "actions/download-artifact", ref: "v4" },
+            raw: { action: "actions/checkout@v4" },
           },
         }],
       }] as unknown as JobSummary[];
@@ -56,10 +52,8 @@ describe(filename, () => {
             p90: 61,
           },
           stepModel: {
-            uses: {
-              action: "actions/download-artifact",
-              ref: "v3",
-            },
+            uses: { action: "actions/download-artifact", ref: "v3" },
+            raw: { action: "actions/checkout@v3" },
           },
         }],
       }] as unknown as JobSummary[];
