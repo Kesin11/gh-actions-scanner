@@ -1,6 +1,9 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 
+export type RepositoryResponse =
+  RestEndpointMethodTypes["repos"]["get"]["response"]["data"];
+
 export type WorkflowRun =
   RestEndpointMethodTypes["actions"]["getWorkflowRunAttempt"]["response"][
     "data"
@@ -76,6 +79,17 @@ export class Github {
     }
   }
 
+  async fetchRepository(
+    owner: string,
+    repo: string,
+  ): Promise<RepositoryResponse> {
+    const res = await this.octokit.repos.get({
+      owner,
+      repo,
+    });
+    return res.data;
+  }
+
   async fetchWorkflowRunUsages(
     workflowRuns: WorkflowRun[],
   ): Promise<WorkflowRunUsage[] | undefined> {
@@ -92,6 +106,7 @@ export class Github {
     return (await Promise.all(promises)).map((res) => res.data);
   }
 
+  // NOTE: This is a cacheable API; the run_id and attempt_number pairs ensure consistent results.
   async fetchWorkflowJobs(
     workflowRuns: WorkflowRun[],
   ): Promise<WorkflowJobs> {
@@ -113,11 +128,13 @@ export class Github {
     owner: string,
     repo: string,
     perPage: number,
+    branch?: string,
   ): Promise<WorkflowRun[]> {
     const res = await this.octokit.actions.listWorkflowRunsForRepo({
       owner,
       repo,
       per_page: perPage,
+      branch,
     });
     return res.data.workflow_runs;
   }
@@ -158,10 +175,26 @@ export class Github {
         ref: workflowRun.head_sha,
       });
     });
-    // NOTE: fetchContentの側でawaitしてしまっているのでPromise.allで並列の効果があるかは怪しいかもしれない
     return await Promise.all(promises);
   }
 
+  async fetchWorkflowFilesByRef(
+    workflowRuns: WorkflowRun[],
+    ref: string,
+  ): Promise<(FileContent | undefined)[]> {
+    const promises = workflowRuns.map((workflowRun) => {
+      return this.fetchContent({
+        owner: workflowRun.repository.owner.login,
+        repo: workflowRun.repository.name,
+        path: workflowRun.path,
+        ref,
+      });
+    });
+    return await Promise.all(promises);
+  }
+
+  // NOTE: This is a cacheable API if ref is a commit hash; it is also cacheable if ref is a branch, as long as it is short-lived.
+  // deno-lint-ignore require-await
   async fetchContent(params: {
     owner: string;
     repo: string;
@@ -188,8 +221,8 @@ export class Github {
         }
       })
       .catch((_error) => {
-        console.debug(
-          `fetchContent: ${params.owner}/${params.repo}/${params.path}`,
+        console.warn(
+          `fetchContent not found: ref: ${params.ref}, path: ${params.owner}/${params.repo}/${params.path}`,
         );
         return undefined;
       });

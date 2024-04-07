@@ -42,7 +42,7 @@ const { options, args: _args } = await new Command()
   //   default: 20,
   // })
   .option(
-    "-p, --perpage <per_lage:integer>",
+    "-p, --perpage <perpage:integer>",
     "Per page number of runs to fetch",
     {
       default: 20,
@@ -70,6 +70,11 @@ const { options, args: _args } = await new Command()
       default: severityType.values(),
     },
   )
+  .option(
+    "--workflow-file-ref <workflow_file_ref:string>",
+    "Git ref for workflow files that will use showing url at result. Default: Repository main branch",
+    { default: undefined },
+  )
   .parse(Deno.args);
 
 const [owner, repo] = options.repo.split("/");
@@ -83,10 +88,18 @@ const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 
-// TODO: runを日付でソートして、workflow_idごとに最新のrunだけを残してfetchするのもを最小限にする
-// 日付だとブランチごとの最新を考慮できないが、それは実行時のオプションでブランチ指定などを追加してユーザーに任せる
-const workflowFiles = await github.fetchWorkflowFiles(workflowRuns);
-// console.log(workflowFiles);
+// Fetch repo default branch if options.workflowFileRef is not set
+const workflowFileRef = options.workflowFileRef ??
+  (await github.fetchRepository(owner, repo)).default_branch;
+const workflowFiles = await github.fetchWorkflowFilesByRef(
+  workflowRuns,
+  workflowFileRef,
+);
+if (workflowFiles.every((it) => it === undefined)) {
+  throw new Error(
+    "No workflow files found. Maybe --workflow_file_ref is invalid ref.",
+  );
+}
 const workflowModels = workflowFiles
   .filter((it) => it !== undefined)
   .map((fileContent) => new WorkflowModel(fileContent!));
