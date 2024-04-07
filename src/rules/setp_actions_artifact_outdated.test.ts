@@ -5,7 +5,8 @@ import {
 } from "https://deno.land/std@0.212.0/assert/mod.ts";
 import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { checkSlowArtifactAction } from "./step_actions_artifact_outdated.ts";
-import { JobSummary } from "../workflow_summariser.ts";
+import type { JobSummary } from "../workflow_summariser.ts";
+import type { RuleArgs } from "./types.ts";
 
 const filename = basename(import.meta.url);
 
@@ -24,7 +25,9 @@ describe(filename, () => {
         }],
       }] as unknown as JobSummary[];
 
-      const actual = await checkSlowArtifactAction(jobSummaries);
+      const actual = await checkSlowArtifactAction(
+        { jobSummaries } as RuleArgs,
+      );
       assertEquals(actual, []);
     });
 
@@ -41,7 +44,9 @@ describe(filename, () => {
         }],
       }] as unknown as JobSummary[];
 
-      const actual = await checkSlowArtifactAction(jobSummaries);
+      const actual = await checkSlowArtifactAction(
+        { jobSummaries } as RuleArgs,
+      );
       assertEquals(actual, []);
     });
 
@@ -58,7 +63,9 @@ describe(filename, () => {
         }],
       }] as unknown as JobSummary[];
 
-      const actual = await checkSlowArtifactAction(jobSummaries);
+      const actual = await checkSlowArtifactAction(
+        { jobSummaries } as RuleArgs,
+      );
       assertGreater(actual.length, 0);
       assertEquals(actual[0].severity, "high");
     });

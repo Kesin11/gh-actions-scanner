@@ -1,7 +1,6 @@
-import type { RuleResult } from "./types.ts";
 import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
-import type { JobSummary } from "../workflow_summariser.ts";
 import { stringify } from "https://deno.land/std@0.212.0/yaml/stringify.ts";
+import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {
   ruleId: "actions-scanner/step_old_action_artifact",
@@ -15,7 +14,7 @@ const THRESHOLD_VERSION = "v3";
 // stepSummaries.durationStatSecsが一定以上 && actions/download-artifact@v3を使っている場合はv4を推奨する
 // deno-lint-ignore require-await
 export async function checkSlowArtifactAction(
-  jobSummaries: JobSummary[],
+  { jobSummaries }: RuleArgs,
 ): Promise<RuleResult[]> {
   // 全てのjobを捜査してactions/download-artifact OR actions/upload-artifactを使っているstepSummariesを抽出
   const artifactSteps = [];

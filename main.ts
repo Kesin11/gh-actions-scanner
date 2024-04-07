@@ -21,6 +21,7 @@ import type { FormatterType } from "./src/formatter/formatter.ts";
 import { severityList } from "./src/rules/types.ts";
 import { filterSeverity } from "./src/rules_translator.ts";
 import { sortRules } from "./src/rules_translator.ts";
+import type { RuleArgs } from "./src/rules/types.ts";
 
 const formatterType = new EnumType(formatterList);
 const severityType = new EnumType(severityList);
@@ -117,21 +118,28 @@ const jobSummaries = createJobSummaries(
 );
 // console.dir(jobSummaries, { depth: null });
 
-const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
-const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
+const actionsCacheUsage = await github.fetchActionsCacheUsage(owner, repo);
+const actionsCacheList = await github.fetchActionsCacheList(owner, repo, 5);
 
 // Scan
+const ruleArgs: RuleArgs = {
+  runSummaries,
+  jobSummaries,
+  actionsCacheUsage,
+  actionsCacheList,
+  config: {},
+};
 let result = [];
-result.push(await reportWorkflowRetryRuns(runSummaries));
-result.push(await workflowCountStat(runSummaries));
-result.push(await reportWorkflowUsage(runSummaries));
+result.push(await reportWorkflowRetryRuns(ruleArgs));
+result.push(await workflowCountStat(ruleArgs));
+result.push(await reportWorkflowUsage(ruleArgs));
 
-result.push(await reportActiveCache(cacheUsage));
-result.push(await reportCacheList(cacheList));
+result.push(await reportActiveCache(ruleArgs));
+result.push(await reportCacheList(ruleArgs));
 
-result.push(await checkSlowArtifactAction(jobSummaries));
-result.push(await checkCheckoutFilterBlobNone(jobSummaries));
-result.push(await checkTooShortBillableJob(jobSummaries));
+result.push(await checkSlowArtifactAction(ruleArgs));
+result.push(await checkCheckoutFilterBlobNone(ruleArgs));
+result.push(await checkTooShortBillableJob(ruleArgs));
 
 result = filterSeverity(result.flat(), options.severity);
 result = sortRules(result);

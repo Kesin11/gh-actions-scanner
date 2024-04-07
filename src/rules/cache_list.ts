@@ -1,5 +1,4 @@
-import type { RuleResult } from "./types.ts";
-import type { ActionsCacheList } from "../../packages/github/github.ts";
+import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {
   ruleId: "actions-scanner/cache_list",
@@ -9,9 +8,9 @@ const meta = {
 
 // deno-lint-ignore require-await
 export async function reportCacheList(
-  cacheList: ActionsCacheList,
+  { actionsCacheList }: RuleArgs,
 ): Promise<RuleResult[]> {
-  const topCacheList = cacheList.actions_caches.slice(0, 4);
+  const topCacheList = actionsCacheList.actions_caches.slice(0, 4);
   // console.debug(topCacheList.map((cache) => {
   //   return {
   //     ref: cache.ref,

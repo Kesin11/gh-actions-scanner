@@ -5,7 +5,8 @@ import {
   it,
 } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { reportWorkflowRetryRuns } from "./workflow_retry_runs.ts";
-import { type RunSummary } from "../workflow_summariser.ts";
+import type { RunSummary } from "../workflow_summariser.ts";
+import type { RuleArgs } from "./types.ts";
 
 describe("workflow_retry_runs", () => {
   describe(reportWorkflowRetryRuns.name, () => {
@@ -13,14 +14,16 @@ describe("workflow_retry_runs", () => {
     });
 
     it("has not any retried workflows", async () => {
-      const runsSummary = [
+      const runSummaries = [
         {
           name: "dummy",
           run_attemp: 1,
           run_id: 1,
         },
       ] as RunSummary[];
-      const actual = await reportWorkflowRetryRuns(runsSummary);
+      const actual = await reportWorkflowRetryRuns(
+        { runSummaries } as RuleArgs,
+      );
       assertEquals(
         actual,
         [],
@@ -28,7 +31,7 @@ describe("workflow_retry_runs", () => {
     });
 
     it("has retried workflow", async () => {
-      const runsSummary = [
+      const runSummaries = [
         {
           name: "dummy1",
           run_attemp: 1,
@@ -45,7 +48,9 @@ describe("workflow_retry_runs", () => {
           run_id: 2,
         },
       ] as RunSummary[];
-      const actual = await reportWorkflowRetryRuns(runsSummary);
+      const actual = await reportWorkflowRetryRuns(
+        { runSummaries } as RuleArgs,
+      );
       assertEquals(
         actual[0].messages,
         ["dummy1: 1/2 runs are retried."],
