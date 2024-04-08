@@ -25,3 +25,4 @@ export type RuleArgs = {
   runSummaries: RunSummary[];
   config: unknown;
 };
+export type RuleFunc = (args: RuleArgs) => Promise<RuleResult[]>;

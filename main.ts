@@ -7,15 +7,7 @@ import {
   createJobSummaries,
   createRunSummaries,
 } from "./src/workflow_summariser.ts";
-import { reportCacheList } from "./src/rules/cache_list.ts";
-import { reportActiveCache } from "./src/rules/cache_active_size.ts";
-import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
-import { workflowCountStat } from "./src/rules/workflow_count_stat.ts";
-import { reportWorkflowRetryRuns } from "./src/rules/workflow_retry_runs.ts";
 import { WorkflowModel } from "./packages/workflow_model/src/workflow_file.ts";
-import { checkSlowArtifactAction } from "./src/rules/step_actions_artifact_outdated.ts";
-import { checkCheckoutFilterBlobNone } from "./src/rules/step_actions_checkout_depth0.ts";
-import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
 import { Formatter, formatterList } from "./src/formatter/formatter.ts";
 import type { FormatterType } from "./src/formatter/formatter.ts";
 import { severityList } from "./src/rules/types.ts";
@@ -130,17 +122,12 @@ const ruleArgs: RuleArgs = {
   config: {},
 };
 let result = [];
-result.push(await reportWorkflowRetryRuns(ruleArgs));
-result.push(await workflowCountStat(ruleArgs));
-result.push(await reportWorkflowUsage(ruleArgs));
+const config = await import("./src/config_default.ts");
+for (const ruleFunc of config.default.rules) {
+  result.push(await ruleFunc(ruleArgs));
+}
 
-result.push(await reportActiveCache(ruleArgs));
-result.push(await reportCacheList(ruleArgs));
-
-result.push(await checkSlowArtifactAction(ruleArgs));
-result.push(await checkCheckoutFilterBlobNone(ruleArgs));
-result.push(await checkTooShortBillableJob(ruleArgs));
-
+// Translate
 result = filterSeverity(result.flat(), options.severity);
 result = sortRules(result);
 
