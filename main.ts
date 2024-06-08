@@ -7,20 +7,13 @@ import {
   createJobSummaries,
   createRunSummaries,
 } from "./src/workflow_summariser.ts";
-import { reportCacheList } from "./src/rules/cache_list.ts";
-import { reportActiveCache } from "./src/rules/cache_active_size.ts";
-import { reportWorkflowUsage } from "./src/rules/workflow_run_usage.ts";
-import { workflowCountStat } from "./src/rules/workflow_count_stat.ts";
-import { reportWorkflowRetryRuns } from "./src/rules/workflow_retry_runs.ts";
 import { WorkflowModel } from "./packages/workflow_model/src/workflow_file.ts";
-import { checkSlowArtifactAction } from "./src/rules/step_actions_artifact_outdated.ts";
-import { checkCheckoutFilterBlobNone } from "./src/rules/step_actions_checkout_depth0.ts";
-import { checkTooShortBillableJob } from "./src/rules/job_too_short_billable_runner.ts";
 import { Formatter, formatterList } from "./src/formatter/formatter.ts";
 import type { FormatterType } from "./src/formatter/formatter.ts";
 import { severityList } from "./src/rules/types.ts";
 import { filterSeverity } from "./src/rules_translator.ts";
 import { sortRules } from "./src/rules_translator.ts";
+import type { RuleArgs } from "./src/rules/types.ts";
 
 const formatterType = new EnumType(formatterList);
 const severityType = new EnumType(severityList);
@@ -117,22 +110,26 @@ const jobSummaries = createJobSummaries(
 );
 // console.dir(jobSummaries, { depth: null });
 
-const cacheUsage = await github.fetchActionsCacheUsage(owner, repo);
-const cacheList = await github.fetchActionsCacheList(owner, repo, 5);
+const actionsCacheUsage = await github.fetchActionsCacheUsage(owner, repo);
+const actionsCacheList = await github.fetchActionsCacheList(owner, repo, 5);
 
 // Scan
+const ruleArgs: RuleArgs = {
+  runSummaries,
+  jobSummaries,
+  actionsCacheUsage,
+  actionsCacheList,
+  config: {},
+};
 let result = [];
-result.push(await reportWorkflowRetryRuns(runSummaries));
-result.push(await workflowCountStat(runSummaries));
-result.push(await reportWorkflowUsage(runSummaries));
+// TODO: configファイルのパスを指定するオプションで切り替えたりデフォルトで読み込む条件などの実装
+const config = await import("./src/config_default.ts");
+// const config = await import("./actions-scanner.config.ts");
+for (const ruleFunc of config.default.rules) {
+  result.push(await ruleFunc(ruleArgs));
+}
 
-result.push(await reportActiveCache(cacheUsage));
-result.push(await reportCacheList(cacheList));
-
-result.push(await checkSlowArtifactAction(jobSummaries));
-result.push(await checkCheckoutFilterBlobNone(jobSummaries));
-result.push(await checkTooShortBillableJob(jobSummaries));
-
+// Translate
 result = filterSeverity(result.flat(), options.severity);
 result = sortRules(result);
 

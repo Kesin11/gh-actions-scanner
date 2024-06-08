@@ -1,4 +1,4 @@
-import type { RuleResult } from "./types.ts";
+import type { RuleArgs, RuleResult } from "./types.ts";
 import type { ActionsCacheUsage } from "../../packages/github/github.ts";
 
 export const THRESHOLD_CACHE_SIZE_GB = 9;
@@ -10,15 +10,15 @@ const meta = {
 
 // deno-lint-ignore require-await
 export async function reportActiveCache(
-  activeCache: ActionsCacheUsage,
+  { actionsCacheUsage }: RuleArgs,
 ): Promise<RuleResult[]> {
   const activeCacheSize =
-    (activeCache.active_caches_size_in_bytes / 1024 / 1024 / 1024)
+    (actionsCacheUsage.active_caches_size_in_bytes / 1024 / 1024 / 1024)
       .toPrecision(2);
 
   const ruleResult = (Number(activeCacheSize) >= THRESHOLD_CACHE_SIZE_GB)
-    ? reportCacheReachLimit(activeCache, activeCacheSize)
-    : reportCache(activeCache, activeCacheSize);
+    ? reportCacheReachLimit(actionsCacheUsage, activeCacheSize)
+    : reportCache(actionsCacheUsage, activeCacheSize);
 
   return [ruleResult];
 }

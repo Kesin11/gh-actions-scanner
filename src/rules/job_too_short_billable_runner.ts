@@ -1,5 +1,4 @@
-import type { RuleResult } from "./types.ts";
-import type { JobSummary } from "../workflow_summariser.ts";
+import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {
   ruleId: "actions-scanner/job_too_short_billable_runner",
@@ -19,7 +18,7 @@ function isLargerRunner(runner: string) {
 // 課金対象のジョブが中央値で1min未満の場合はジョブの合併を提案する
 // deno-lint-ignore require-await
 export async function checkTooShortBillableJob(
-  jobSummaries: JobSummary[],
+  { jobSummaries }: RuleArgs,
 ): Promise<RuleResult[]> {
   const reportedJobs = [];
   for (const job of jobSummaries) {

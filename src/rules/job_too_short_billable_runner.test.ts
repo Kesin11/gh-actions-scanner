@@ -5,7 +5,8 @@ import {
 } from "https://deno.land/std@0.212.0/assert/mod.ts";
 import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
 import { checkTooShortBillableJob } from "./job_too_short_billable_runner.ts";
-import { JobSummary } from "../workflow_summariser.ts";
+import type { RuleArgs } from "./types.ts";
+import type { JobSummary } from "../workflow_summariser.ts";
 
 const filename = basename(import.meta.url);
 
@@ -20,7 +21,9 @@ describe(filename, () => {
         },
       }] as unknown as JobSummary[];
 
-      const actual = await checkTooShortBillableJob(jobSummaries);
+      const actual = await checkTooShortBillableJob(
+        { jobSummaries } as RuleArgs,
+      );
       assertEquals(actual, []);
     });
 
@@ -33,7 +36,9 @@ describe(filename, () => {
         },
       }] as unknown as JobSummary[];
 
-      const actual = await checkTooShortBillableJob(jobSummaries);
+      const actual = await checkTooShortBillableJob(
+        { jobSummaries } as RuleArgs,
+      );
       assertEquals(actual, []);
     });
 
@@ -46,7 +51,9 @@ describe(filename, () => {
         },
       }] as unknown as JobSummary[];
 
-      const actual = await checkTooShortBillableJob(jobSummaries);
+      const actual = await checkTooShortBillableJob(
+        { jobSummaries } as RuleArgs,
+      );
       assertEquals(actual, []);
     });
 
@@ -65,7 +72,9 @@ describe(filename, () => {
         },
       }] as unknown as JobSummary[];
 
-      const actual = await checkTooShortBillableJob(jobSummaries);
+      const actual = await checkTooShortBillableJob(
+        { jobSummaries } as RuleArgs,
+      );
       assertGreater(actual.length, 0);
       assertEquals(actual[0].severity, "medium");
     });

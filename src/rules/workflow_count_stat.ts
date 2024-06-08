@@ -1,5 +1,4 @@
-import type { RuleResult } from "./types.ts";
-import type { RunSummary } from "../workflow_summariser.ts";
+import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {
   ruleId: "actions-scanner/workflow_count_stat",
@@ -9,10 +8,10 @@ const meta = {
 
 // deno-lint-ignore require-await
 export async function workflowCountStat(
-  runsSummary: RunSummary[],
+  { runSummaries }: RuleArgs,
 ): Promise<RuleResult[]> {
   const workflowCount: Record<string, number> = {};
-  const runsByWorkflow = Object.groupBy(runsSummary, (run) => run.name);
+  const runsByWorkflow = Object.groupBy(runSummaries, (run) => run.name);
   for (const workflowName of Object.keys(runsByWorkflow)) {
     const runs = runsByWorkflow[workflowName]!;
     workflowCount[workflowName] = runs.length;

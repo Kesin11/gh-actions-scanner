@@ -1,5 +1,4 @@
-import type { RuleResult } from "./types.ts";
-import type { RunSummary } from "../workflow_summariser.ts";
+import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {
   ruleId: "actions-scanner/workflow_retry_runs",
@@ -9,15 +8,15 @@ const meta = {
 
 // deno-lint-ignore require-await
 export async function reportWorkflowRetryRuns(
-  runsSummary: RunSummary[],
+  { runSummaries }: RuleArgs,
 ): Promise<RuleResult[]> {
-  const retriedRuns = runsSummary.filter((run) =>
+  const retriedRuns = runSummaries.filter((run) =>
     run.run_attemp && run.run_attemp > 1
   );
 
   if (retriedRuns.length === 0) return [];
 
-  const allGroup = Object.groupBy(runsSummary, (run) => run.name);
+  const allGroup = Object.groupBy(runSummaries, (run) => run.name);
   const retriedGroup = Object.groupBy(retriedRuns, (run) => run.name);
 
   return [{
