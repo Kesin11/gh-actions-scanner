@@ -123,8 +123,8 @@ const ruleArgs: RuleArgs = {
 };
 let result = [];
 // TODO: configファイルのパスを指定するオプションで切り替えたりデフォルトで読み込む条件などの実装
-// const config = await import("./src/config_default.ts");
-const config = await import("./actions-scanner.config.ts");
+const config = await import("./src/config_default.ts");
+// const config = await import("./actions-scanner.config.ts");
 for (const ruleFunc of config.default.rules) {
   result.push(await ruleFunc(ruleArgs));
 }
