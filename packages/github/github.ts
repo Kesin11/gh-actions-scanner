@@ -60,11 +60,11 @@ export class Github {
   ) {
     this.baseUrl = Github.getBaseUrl(options?.host);
     this.isGHES = this.baseUrl !== "https://api.github.com";
-    this.token = options?.token ?? Deno.env.get("GITHUB_TOKEN") ?? undefined,
-      this.octokit = new Octokit({
-        auth: this.token,
-        baseUrl: this.baseUrl,
-      });
+    this.token = options?.token ?? Deno.env.get("GITHUB_TOKEN") ?? undefined;
+    this.octokit = new Octokit({
+      auth: this.token,
+      baseUrl: this.baseUrl,
+    });
   }
 
   private static getBaseUrl(host?: string): string {
