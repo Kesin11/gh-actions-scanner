@@ -31,15 +31,11 @@ const { options, args: _args } = await new Command()
     "Fullname of repository. OWNER/REPO format",
     { required: true },
   )
-  // TODO: packages/github.ts側でループしてfetchする機能実装後に有効化する
-  // .option("-L, --limit <limit:integer>", "Maximum number of runs to fetch", {
-  //   default: 20,
-  // })
   .option(
-    "-p, --perpage <perpage:integer>",
-    "Per page number of runs to fetch",
+    "--created <created:string>",
+    "Returns workflow runs created within the given date-time range. ex: >=YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD. Default is <${YESTERDAY}. For more information on the syntax, see https://docs.github.com/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax#query-for-dates",
     {
-      default: 20,
+      default: undefined,
     },
   )
   .option(
@@ -85,6 +81,13 @@ const config = await loadConfig(options.config);
 
 const [owner, repo] = options.repo.split("/");
 const github = new Github({ debug: options.debug });
+const created = options.created ??
+  `>=${new Date().toISOString().split("T")[0]}`; // Default is yesterday of <YYYY-MM-DD format.
+
+console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
+const workflowRuns =
+  (await github.fetchWorkflowRunsWithCreated(owner, repo, created))
+    .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
 // console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);

@@ -125,19 +125,23 @@ export class Github {
     return workflowJobs.flat();
   }
 
-  async fetchWorkflowRuns(
+  async fetchWorkflowRunsWithCreated(
     owner: string,
     repo: string,
-    perPage: number,
+    created: string,
     branch?: string,
   ): Promise<WorkflowRun[]> {
-    const res = await this.octokit.actions.listWorkflowRunsForRepo({
-      owner,
-      repo,
-      per_page: perPage,
-      branch,
-    });
-    return res.data.workflow_runs;
+    const res = await this.octokit.paginate(
+      this.octokit.actions.listWorkflowRunsForRepo,
+      {
+        owner,
+        repo,
+        created,
+        per_page: 100, // MAX per_page num
+        branch,
+      },
+    );
+    return res;
   }
 
   async fetchActionsCacheUsage(
@@ -179,6 +183,9 @@ export class Github {
     return await Promise.all(promises);
   }
 
+  // NOTE: このリクエスト数はworkflowRunsの数とイコールなので100を余裕で超えてしまう
+  // fetchContent自体を並列に呼び出すとキャッシュにセットする前に次のリクエストが来る可能性があり、実質あまりキャッシュできていない
+  // fetchContentの呼び出し並列数を絞るなどをやったほうが良い
   async fetchWorkflowFilesByRef(
     workflowRuns: WorkflowRun[],
     ref: string,
