@@ -26,3 +26,7 @@ export type RuleArgs = {
   config: unknown;
 };
 export type RuleFunc = (args: RuleArgs) => Promise<RuleResult[]>;
+
+export type Config = {
+  rules: RuleFunc[];
+};
