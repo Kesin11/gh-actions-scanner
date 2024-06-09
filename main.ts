@@ -14,6 +14,7 @@ import { severityList } from "./src/rules/types.ts";
 import { filterSeverity } from "./src/rules_translator.ts";
 import { sortRules } from "./src/rules_translator.ts";
 import type { RuleArgs } from "./src/rules/types.ts";
+import { loadConfig } from "./src/config.ts";
 
 const formatterType = new EnumType(formatterList);
 const severityType = new EnumType(severityList);
@@ -46,6 +47,11 @@ const { options, args: _args } = await new Command()
     "GitHub host. Specify your GHES host If you will use it on GHES",
     { default: "github.com" },
   )
+  .option(
+    "--config <config:string>",
+    "config file path. Default: actions-scanner.config.ts . If actions-scanner.config.ts is not found, use included default config.",
+    { default: undefined },
+  )
   .type("format", formatterType)
   .option(
     "-f, --format <name:format>",
@@ -69,6 +75,8 @@ const { options, args: _args } = await new Command()
     { default: undefined },
   )
   .parse(Deno.args);
+
+const config = await loadConfig(options.config);
 
 const [owner, repo] = options.repo.split("/");
 // const limit = options.limit;
@@ -122,10 +130,8 @@ const ruleArgs: RuleArgs = {
   config: {},
 };
 let result = [];
-// TODO: configファイルのパスを指定するオプションで切り替えたりデフォルトで読み込む条件などの実装
-const config = await import("./src/config_default.ts");
-// const config = await import("./actions-scanner.config.ts");
-for (const ruleFunc of config.default.rules) {
+
+for (const ruleFunc of config.rules) {
   result.push(await ruleFunc(ruleArgs));
 }
 
