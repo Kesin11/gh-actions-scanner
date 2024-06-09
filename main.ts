@@ -74,17 +74,17 @@ const { options, args: _args } = await new Command()
     "Git ref for workflow files that will use showing url at result. Default: Repository main branch",
     { default: undefined },
   )
+  .option(
+    "--debug [debug:boolean]",
+    "Enable debug log. Default: false",
+    { default: false },
+  )
   .parse(Deno.args);
 
 const config = await loadConfig(options.config);
 
 const [owner, repo] = options.repo.split("/");
-// const limit = options.limit;
-const perPage = options.perpage;
-const github = new Github();
-console.log(`owner: ${owner}, repo: ${repo}, per_page: ${perPage}`);
-const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
-  .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
+const github = new Github({ debug: options.debug });
 // console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);

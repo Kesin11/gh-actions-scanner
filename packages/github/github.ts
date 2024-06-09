@@ -56,7 +56,7 @@ export class Github {
   contentCache: Map<string, FileContent> = new Map();
 
   constructor(
-    options?: { token?: string; host?: string },
+    options?: { token?: string; host?: string; debug?: boolean },
   ) {
     this.baseUrl = Github.getBaseUrl(options?.host);
     this.isGHES = this.baseUrl !== "https://api.github.com";
@@ -64,6 +64,7 @@ export class Github {
     this.octokit = new Octokit({
       auth: this.token,
       baseUrl: this.baseUrl,
+      log: options?.debug ? console : undefined,
     });
   }
 
