@@ -31,15 +31,11 @@ const { options, args: _args } = await new Command()
     "Fullname of repository. OWNER/REPO format",
     { required: true },
   )
-  // TODO: packages/github.ts側でループしてfetchする機能実装後に有効化する
-  // .option("-L, --limit <limit:integer>", "Maximum number of runs to fetch", {
-  //   default: 20,
-  // })
   .option(
-    "-p, --perpage <perpage:integer>",
-    "Per page number of runs to fetch",
+    "--created <created:string>",
+    "Returns workflow runs created within the given date-time range. ex: >=YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD. Default is <${YESTERDAY}. For more information on the syntax, see https://docs.github.com/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax#query-for-dates",
     {
-      default: 20,
+      default: undefined,
     },
   )
   .option(
@@ -74,17 +70,30 @@ const { options, args: _args } = await new Command()
     "Git ref for workflow files that will use showing url at result. Default: Repository main branch",
     { default: undefined },
   )
+  .option(
+    "--debug [debug:boolean]",
+    "Enable debug log. Default: false",
+    { default: false },
+  )
   .parse(Deno.args);
 
 const config = await loadConfig(options.config);
 
 const [owner, repo] = options.repo.split("/");
-// const limit = options.limit;
-const perPage = options.perpage;
-const github = new Github();
-console.log(`owner: ${owner}, repo: ${repo}, per_page: ${perPage}`);
-const workflowRuns = (await github.fetchWorkflowRuns(owner, repo, perPage))
-  .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
+const github = new Github({ debug: options.debug });
+const created = options.created ??
+  `>=${new Date().toISOString().split("T")[0]}`; // Default is yesterday of <YYYY-MM-DD format.
+
+console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
+const workflowRuns =
+  (await github.fetchWorkflowRunsWithCreated(owner, repo, created))
+    .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
+
+if (workflowRuns.length === 0) {
+  throw new Error(
+    "No workflow runs found. Try expanding the range of dates in the --created option.",
+  );
+}
 // console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);

@@ -2,11 +2,12 @@
 set -uo pipefail
 
 signal=0
+DATE=$(date -d "2 week ago" '+%Y-%m-%d')
 
 function run {
   repo=$1
   echo "Run ${repo}"
-  deno run -A main.ts -R $repo > /dev/null
+  deno run -A main.ts -R $repo --created ">${DATE}" > /dev/null
   signal=$(( $signal + $?))
 }
 run "Kesin11/CIAnalyzer"
