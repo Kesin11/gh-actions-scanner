@@ -1,4 +1,5 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
+import { chunk } from "https://deno.land/std@0.224.0/collections/chunk.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
 
 export type RepositoryResponse =
@@ -185,20 +186,27 @@ export class Github {
 
   // NOTE: このリクエスト数はworkflowRunsの数とイコールなので100を余裕で超えてしまう
   // fetchContent自体を並列に呼び出すとキャッシュにセットする前に次のリクエストが来る可能性があり、実質あまりキャッシュできていない
-  // fetchContentの呼び出し並列数を絞るなどをやったほうが良い
+  // chunk数で並列数を制限してキャッシュを活用することでAPIリクエスト数を抑える
   async fetchWorkflowFilesByRef(
     workflowRuns: WorkflowRun[],
     ref: string,
+    chunkSize = 10,
   ): Promise<(FileContent | undefined)[]> {
-    const promises = workflowRuns.map((workflowRun) => {
-      return this.fetchContent({
-        owner: workflowRun.repository.owner.login,
-        repo: workflowRun.repository.name,
-        path: workflowRun.path,
-        ref,
-      });
-    });
-    return await Promise.all(promises);
+    const workflowRunsChunks = chunk(workflowRuns, chunkSize);
+
+    const results = [];
+    for (const chunk of workflowRunsChunks) {
+      const chunkResults = await Promise.all(chunk.map((workflowRun) => {
+        return this.fetchContent({
+          owner: workflowRun.repository.owner.login,
+          repo: workflowRun.repository.name,
+          path: workflowRun.path,
+          ref,
+        });
+      }));
+      results.push(...chunkResults);
+    }
+    return results;
   }
 
   // NOTE: This is a cacheable API if ref is a commit hash; it is also cacheable if ref is a branch, as long as it is short-lived.
@@ -209,8 +217,6 @@ export class Github {
     path: string;
     ref: string;
   }): Promise<(FileContent | undefined)> {
-    // console.debug(`getContent: ${params.owner}/${params.repo}/${params.path}`);
-
     const cache = this.contentCache.get(JSON.stringify(params));
     if (cache) return cache;
 
