@@ -88,6 +88,12 @@ console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
 const workflowRuns =
   (await github.fetchWorkflowRunsWithCreated(owner, repo, created))
     .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
+
+if (workflowRuns.length === 0) {
+  throw new Error(
+    "No workflow runs found. Try expanding the range of dates in the --created option.",
+  );
+}
 // console.dir(workflowRuns, { depth: null });
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
