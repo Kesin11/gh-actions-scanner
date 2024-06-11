@@ -78,6 +78,10 @@ const { options, args: _args } = await new Command()
   .parse(Deno.args);
 
 const config = await loadConfig(options.config);
+if (config.isErr()) {
+  console.error(config.error);
+  Deno.exit(1);
+}
 
 const [owner, repo] = options.repo.split("/");
 const github = new Github({ debug: options.debug });
@@ -140,7 +144,7 @@ const ruleArgs: RuleArgs = {
 };
 let result = [];
 
-for (const ruleFunc of config.rules) {
+for (const ruleFunc of config.value.rules) {
   result.push(await ruleFunc(ruleArgs));
 }
 
