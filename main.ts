@@ -89,9 +89,11 @@ const created = options.created ??
   `>=${new Date().toISOString().split("T")[0]}`; // Default is yesterday of <YYYY-MM-DD format.
 
 console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
-const workflowRuns =
-  (await github.fetchWorkflowRunsWithCreated(owner, repo, created))
-    .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
+const workflowRuns = await github.fetchWorkflowRunsWithCreated(
+  owner,
+  repo,
+  created,
+);
 
 if (workflowRuns.length === 0) {
   throw new Error(
