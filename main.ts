@@ -2,7 +2,7 @@ import {
   Command,
   EnumType,
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
-import { Github } from "./packages/github/github.ts";
+import { type FileContent, Github } from "./packages/github/github.ts";
 import {
   createJobSummaries,
   createRunSummaries,
@@ -94,13 +94,13 @@ const workflowRuns = await github.fetchWorkflowRunsWithCreated(
   repo,
   created,
 );
-
 if (workflowRuns.length === 0) {
-  throw new Error(
+  console.error(
     "No workflow runs found. Try expanding the range of dates in the --created option.",
   );
+  Deno.exit(1);
 }
-// console.dir(workflowRuns, { depth: null });
+
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 
@@ -112,13 +112,15 @@ const workflowFiles = await github.fetchWorkflowFilesByRef(
   workflowFileRef,
 );
 if (workflowFiles.every((it) => it === undefined)) {
-  throw new Error(
+  console.error(
     "No workflow files found. Maybe --workflow_file_ref is invalid ref.",
   );
+  Deno.exit(1);
 }
+
 const workflowModels = workflowFiles
-  .filter((it) => it !== undefined)
-  .map((fileContent) => new WorkflowModel(fileContent!));
+  .filter((it): it is FileContent => it !== undefined)
+  .map((fileContent) => new WorkflowModel(fileContent));
 
 const runSummaries = createRunSummaries(
   workflowRuns,
