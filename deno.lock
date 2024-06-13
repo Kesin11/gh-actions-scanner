@@ -4,6 +4,7 @@
     "specifiers": {
       "npm:@octokit/rest@20.0.2": "npm:@octokit/rest@20.0.2_@octokit+core@5.0.2",
       "npm:chalk@5.3.0": "npm:chalk@5.3.0",
+      "npm:neverthrow@6.2.2": "npm:neverthrow@6.2.2",
       "npm:simple-statistics@7.8.3": "npm:simple-statistics@7.8.3",
       "npm:structured-source@4.0.0": "npm:structured-source@4.0.0",
       "npm:table@6.8.1": "npm:table@6.8.1",
@@ -164,6 +165,10 @@
       },
       "lodash.truncate@4.4.2": {
         "integrity": "sha512-jttmRe7bRse52OsWIMDLaXxWqRAmtIUccAQ3garviCqJjafXOfNMO0yMfNpdD6zbGaTU0P5Nz7e7gAT6cKmJRw==",
+        "dependencies": {}
+      },
+      "neverthrow@6.2.2": {
+        "integrity": "sha512-POR1FACqdK9jH0S2kRPzaZEvzT11wsOxLW520PQV/+vKi9dQe+hXq19EiOvYx7lSRaF5VB9lYGsPInynrnN05w==",
         "dependencies": {}
       },
       "once@1.4.0": {

@@ -3,6 +3,7 @@ import {
   EnumType,
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
 import { type FileContent, Github } from "./packages/github/github.ts";
+import { type Err, fromPromise, type Ok } from "npm:neverthrow@6.2.2";
 import {
   createJobSummaries,
   createRunSummaries,
@@ -13,8 +14,9 @@ import type { FormatterType } from "./src/formatter/formatter.ts";
 import { severityList } from "./src/rules/types.ts";
 import { filterSeverity } from "./src/rules_translator.ts";
 import { sortRules } from "./src/rules_translator.ts";
-import type { RuleArgs } from "./src/rules/types.ts";
+import type { RuleArgs, RuleResult } from "./src/rules/types.ts";
 import { loadConfig } from "./src/config.ts";
+import { RuleExecutionError } from "./src/errors.ts";
 
 const formatterType = new EnumType(formatterList);
 const severityType = new EnumType(severityList);
@@ -146,19 +148,42 @@ const ruleArgs: RuleArgs = {
   actionsCacheList,
   config: {},
 };
-let result = [];
 
+const okResults: Ok<RuleResult[], RuleExecutionError>[] = [];
+const errResults: Err<RuleResult[], RuleExecutionError>[] = [];
 for (const ruleFunc of config.value.rules) {
-  result.push(await ruleFunc(ruleArgs));
+  const result = await fromPromise(
+    ruleFunc(ruleArgs),
+    (e) =>
+      new RuleExecutionError(`${ruleFunc.name} rule throws an error.`, {
+        cause: e,
+      }),
+  );
+  if (result.isOk()) {
+    okResults.push(result);
+  } else {
+    errResults.push(result);
+  }
 }
 
 // Translate
-result = filterSeverity(result.flat(), options.severity);
-result = sortRules(result);
+const ruleResults = okResults
+  .map((okResult) => okResult.value)
+  .map((results) => filterSeverity(results, options.severity))
+  .map((results) => sortRules(results))
+  .flat();
 
 // Format
 const formatter = new Formatter(options.format as FormatterType);
-const formatedResult = formatter.format(result);
+const formatedResult = formatter.format(ruleResults);
 
 // Output
 console.log(formatedResult);
+
+// Output error rules
+if (errResults.length > 0) {
+  console.warn("Some rules throw error. These are skipped.");
+  for (const errResult of errResults) {
+    console.error(errResult.error);
+  }
+}
