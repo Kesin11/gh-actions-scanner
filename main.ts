@@ -3,18 +3,21 @@ import {
   EnumType,
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
 import { type FileContent, Github } from "./packages/github/github.ts";
-import { type Err, fromPromise, type Ok } from "npm:neverthrow@6.2.2";
+import { fromPromise } from "npm:neverthrow@6.2.2";
+import type { Err, Ok } from "npm:neverthrow@6.2.2";
 import {
   createJobSummaries,
   createRunSummaries,
 } from "./src/workflow_summariser.ts";
 import { WorkflowModel } from "./packages/workflow_model/src/workflow_file.ts";
-import { Formatter, formatterList } from "./src/formatter/formatter.ts";
-import type { FormatterType } from "./src/formatter/formatter.ts";
+import {
+  Formatter,
+  formatterList,
+  type FormatterType,
+} from "./src/formatter/formatter.ts";
 import { severityList } from "./src/rules/types.ts";
-import { filterSeverity } from "./src/rules_translator.ts";
-import { sortRules } from "./src/rules_translator.ts";
 import type { RuleArgs, RuleResult } from "./src/rules/types.ts";
+import { filterSeverity, sortRules } from "./src/rules_translator.ts";
 import { loadConfig } from "./src/config.ts";
 import { RuleExecutionError } from "./src/errors.ts";
 
