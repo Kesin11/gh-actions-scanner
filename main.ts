@@ -2,19 +2,24 @@ import {
   Command,
   EnumType,
 } from "https://deno.land/x/cliffy@v1.0.0-rc.3/command/mod.ts";
-import { Github } from "./packages/github/github.ts";
+import { type FileContent, Github } from "./packages/github/github.ts";
+import { fromPromise } from "npm:neverthrow@6.2.2";
+import type { Err, Ok } from "npm:neverthrow@6.2.2";
 import {
   createJobSummaries,
   createRunSummaries,
 } from "./src/workflow_summariser.ts";
 import { WorkflowModel } from "./packages/workflow_model/src/workflow_file.ts";
-import { Formatter, formatterList } from "./src/formatter/formatter.ts";
-import type { FormatterType } from "./src/formatter/formatter.ts";
+import {
+  Formatter,
+  formatterList,
+  type FormatterType,
+} from "./src/formatter/formatter.ts";
 import { severityList } from "./src/rules/types.ts";
-import { filterSeverity } from "./src/rules_translator.ts";
-import { sortRules } from "./src/rules_translator.ts";
-import type { RuleArgs } from "./src/rules/types.ts";
+import type { RuleArgs, RuleResult } from "./src/rules/types.ts";
+import { filterSeverity, sortRules } from "./src/rules_translator.ts";
 import { loadConfig } from "./src/config.ts";
+import { RuleExecutionError } from "./src/errors.ts";
 
 const formatterType = new EnumType(formatterList);
 const severityType = new EnumType(severityList);
@@ -78,6 +83,10 @@ const { options, args: _args } = await new Command()
   .parse(Deno.args);
 
 const config = await loadConfig(options.config);
+if (config.isErr()) {
+  console.error(config.error);
+  Deno.exit(1);
+}
 
 const [owner, repo] = options.repo.split("/");
 const github = new Github({ debug: options.debug });
@@ -85,16 +94,18 @@ const created = options.created ??
   `>=${new Date().toISOString().split("T")[0]}`; // Default is yesterday of <YYYY-MM-DD format.
 
 console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
-const workflowRuns =
-  (await github.fetchWorkflowRunsWithCreated(owner, repo, created))
-    .filter((run) => run.event !== "dynamic"); // Ignore some special runs that have not workflow file. ex: CodeQL
-
+const workflowRuns = await github.fetchWorkflowRunsWithCreated(
+  owner,
+  repo,
+  created,
+);
 if (workflowRuns.length === 0) {
-  throw new Error(
+  console.error(
     "No workflow runs found. Try expanding the range of dates in the --created option.",
   );
+  Deno.exit(1);
 }
-// console.dir(workflowRuns, { depth: null });
+
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
 const workflowJobs = await github.fetchWorkflowJobs(workflowRuns);
 
@@ -106,13 +117,15 @@ const workflowFiles = await github.fetchWorkflowFilesByRef(
   workflowFileRef,
 );
 if (workflowFiles.every((it) => it === undefined)) {
-  throw new Error(
+  console.error(
     "No workflow files found. Maybe --workflow_file_ref is invalid ref.",
   );
+  Deno.exit(1);
 }
+
 const workflowModels = workflowFiles
-  .filter((it) => it !== undefined)
-  .map((fileContent) => new WorkflowModel(fileContent!));
+  .filter((it): it is FileContent => it !== undefined)
+  .map((fileContent) => new WorkflowModel(fileContent));
 
 const runSummaries = createRunSummaries(
   workflowRuns,
@@ -138,19 +151,42 @@ const ruleArgs: RuleArgs = {
   actionsCacheList,
   config: {},
 };
-let result = [];
 
-for (const ruleFunc of config.rules) {
-  result.push(await ruleFunc(ruleArgs));
+const okResults: Ok<RuleResult[], RuleExecutionError>[] = [];
+const errResults: Err<RuleResult[], RuleExecutionError>[] = [];
+for (const ruleFunc of config.value.rules) {
+  const result = await fromPromise(
+    ruleFunc(ruleArgs),
+    (e) =>
+      new RuleExecutionError(`${ruleFunc.name} rule throws an error.`, {
+        cause: e,
+      }),
+  );
+  if (result.isOk()) {
+    okResults.push(result);
+  } else {
+    errResults.push(result);
+  }
 }
 
 // Translate
-result = filterSeverity(result.flat(), options.severity);
-result = sortRules(result);
+const ruleResults = okResults
+  .map((okResult) => okResult.value)
+  .map((results) => filterSeverity(results, options.severity))
+  .map((results) => sortRules(results))
+  .flat();
 
 // Format
 const formatter = new Formatter(options.format as FormatterType);
-const formatedResult = formatter.format(result);
+const formatedResult = formatter.format(ruleResults);
 
 // Output
 console.log(formatedResult);
+
+// Output error rules
+if (errResults.length > 0) {
+  console.warn("Some rules throw error. These are skipped.");
+  for (const errResult of errResults) {
+    console.error(errResult.error);
+  }
+}

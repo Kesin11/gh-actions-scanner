@@ -1,4 +1,5 @@
 import { existsSync } from "https://deno.land/std@0.224.0/fs/exists.ts";
+import { fromPromise, type Result } from "npm:neverthrow@6.2.2";
 import type { Config } from "./rules/types.ts";
 
 type ConfigFile = {
@@ -7,32 +8,40 @@ type ConfigFile = {
 
 const DEFAULT_USER_CONFIG_FILE = "actions-scanner.config.ts";
 
-// TODO: importがエラーになる可能性はあり得る。将来的にはResult型で返したい
 export async function loadConfig(
   configPath: string | undefined,
-): Promise<Config> {
+): Promise<Result<Config, Error>> {
   // case: no set --config option
   if (configPath === undefined) {
     // Load actions-scanner.config.ts if exists.
     if (existsSync(DEFAULT_USER_CONFIG_FILE)) {
-      const absConfigPath = await Deno.realPath(DEFAULT_USER_CONFIG_FILE);
-      console.debug(`Try loading ${absConfigPath} config.`);
-      const config: ConfigFile = await import(absConfigPath);
-
-      return config.default;
+      return await fromPromise(
+        Deno.realPath(DEFAULT_USER_CONFIG_FILE),
+        (e) => e as Error,
+      )
+        .andThen((absConfigPath) => {
+          console.debug(`Try loading ${absConfigPath} config.`);
+          const config: Promise<ConfigFile> = import(absConfigPath);
+          return fromPromise(config, (e) => e as Error);
+        })
+        .map((config) => config.default);
     }
 
     // Load included default config.
     console.debug(`Load included default config.`);
-    const config = await import("./config_default.ts");
-
-    return config.default;
+    return await fromPromise(import("./config_default.ts"), (e) => e as Error)
+      .map((config) => config.default);
   }
 
   // case: set --config option
-  const absConfigPath = await Deno.realPath(configPath);
-  const config: ConfigFile = await import(absConfigPath);
-  console.debug(`Try loading ${absConfigPath} config.`);
-
-  return config.default;
+  return await fromPromise(Deno.realPath(configPath), (e) => e as Error)
+    .andThen((absConfigPath) => {
+      console.debug(`Try loading ${absConfigPath} config.`);
+      const config: Promise<ConfigFile> = import(absConfigPath);
+      return fromPromise(config, (e) => e as Error);
+    })
+    .map((config) => config.default)
+    .mapErr((error) =>
+      new Error(`Failed to load ${configPath}.`, { cause: error })
+    );
 }

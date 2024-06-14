@@ -132,7 +132,7 @@ export class Github {
     created: string,
     branch?: string,
   ): Promise<WorkflowRun[]> {
-    const res = await this.octokit.paginate(
+    const workflowRuns = await this.octokit.paginate(
       this.octokit.actions.listWorkflowRunsForRepo,
       {
         owner,
@@ -142,7 +142,8 @@ export class Github {
         branch,
       },
     );
-    return res;
+    // Ignore some special workflowRuns that have not workflow file. ex: CodeQL
+    return workflowRuns.filter((run) => run.event !== "dynamic");
   }
 
   async fetchActionsCacheUsage(
