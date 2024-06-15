@@ -97,7 +97,7 @@ export class Github {
   // chunk数で並列数を制限してキャッシュを活用することでAPIリクエスト数を抑える
   async fetchWorkflowRunUsages(
     workflowRuns: WorkflowRun[],
-    chunkSize = 10,
+    chunkSize = 20,
   ): Promise<WorkflowRunUsage[] | undefined> {
     // NOTE: GHES does not support this API
     if (this.isGHES) return undefined;
@@ -125,7 +125,7 @@ export class Github {
   // chunk数で並列数を制限してキャッシュを活用することでAPIリクエスト数を抑える
   async fetchWorkflowJobs(
     workflowRuns: WorkflowRun[],
-    chunkSize = 10,
+    chunkSize = 20,
   ): Promise<WorkflowJobs> {
     const workflowJobs: WorkflowJobs = [];
     const workflowJobsChunks = chunk(workflowRuns, chunkSize);
@@ -213,7 +213,7 @@ export class Github {
   async fetchWorkflowFilesByRef(
     workflowRuns: WorkflowRun[],
     ref: string,
-    chunkSize = 10,
+    chunkSize = 20,
   ): Promise<(FileContent | undefined)[]> {
     const workflowRunsChunks = chunk(workflowRuns, chunkSize);
 
