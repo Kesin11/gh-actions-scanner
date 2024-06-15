@@ -92,38 +92,59 @@ export class Github {
     return res.data;
   }
 
+  // NOTE: このリクエスト数はworkflowRunsの数とイコールなので100を余裕で超えてしまう
+  // 本来はFetch APIなどhttpクライアント側でリクエスト数制限をかけるべきだが、Denoだと方法が分からない
+  // chunk数で並列数を制限してキャッシュを活用することでAPIリクエスト数を抑える
   async fetchWorkflowRunUsages(
     workflowRuns: WorkflowRun[],
+    chunkSize = 10,
   ): Promise<WorkflowRunUsage[] | undefined> {
     // NOTE: GHES does not support this API
     if (this.isGHES) return undefined;
 
-    const promises = workflowRuns.map((run) => {
-      return this.octokit.actions.getWorkflowRunUsage({
-        owner: run.repository.owner.login,
-        repo: run.repository.name,
-        run_id: run.id,
+    const workflowRunsChunks = chunk(workflowRuns, chunkSize);
+    const workflowRunsUsages: WorkflowRunUsage[] = [];
+
+    for (const chunk of workflowRunsChunks) {
+      const promises = chunk.map((run) => {
+        return this.octokit.actions.getWorkflowRunUsage({
+          owner: run.repository.owner.login,
+          repo: run.repository.name,
+          run_id: run.id,
+        });
       });
-    });
-    return (await Promise.all(promises)).map((res) => res.data);
+      const chunkResults = (await Promise.all(promises)).map((res) => res.data);
+      workflowRunsUsages.push(...chunkResults);
+    }
+    return workflowRunsUsages;
   }
 
   // NOTE: This is a cacheable API; the run_id and attempt_number pairs ensure consistent results.
+  // NOTE: このリクエスト数はworkflowRunsの数とイコールなので100を余裕で超えてしまう
+  // 本来はFetch APIなどhttpクライアント側でリクエスト数制限をかけるべきだが、Denoだと方法が分からない
+  // chunk数で並列数を制限してキャッシュを活用することでAPIリクエスト数を抑える
   async fetchWorkflowJobs(
     workflowRuns: WorkflowRun[],
+    chunkSize = 10,
   ): Promise<WorkflowJobs> {
-    const promises = workflowRuns.map((run) => {
-      return this.octokit.actions.listJobsForWorkflowRunAttempt({
-        owner: run.repository.owner.login,
-        repo: run.repository.name,
-        run_id: run.id,
-        attempt_number: run.run_attempt ?? 1,
+    const workflowJobs: WorkflowJobs = [];
+    const workflowJobsChunks = chunk(workflowRuns, chunkSize);
+
+    for (const chunk of workflowJobsChunks) {
+      const promises = chunk.map((run) => {
+        return this.octokit.actions.listJobsForWorkflowRunAttempt({
+          owner: run.repository.owner.login,
+          repo: run.repository.name,
+          run_id: run.id,
+          attempt_number: run.run_attempt ?? 1,
+        });
       });
-    });
-    const workflowJobs = (await Promise.all(promises)).map((res) =>
-      res.data.jobs
-    );
-    return workflowJobs.flat();
+      const chunkResults = (await Promise.all(promises)).map((res) =>
+        res.data.jobs
+      );
+      workflowJobs.push(...chunkResults.flat());
+    }
+    return workflowJobs;
   }
 
   async fetchWorkflowRunsWithCreated(
@@ -187,6 +208,7 @@ export class Github {
 
   // NOTE: このリクエスト数はworkflowRunsの数とイコールなので100を余裕で超えてしまう
   // fetchContent自体を並列に呼び出すとキャッシュにセットする前に次のリクエストが来る可能性があり、実質あまりキャッシュできていない
+  // 本来はFetch APIなどhttpクライアント側でリクエスト数制限をかけるべきだが、Denoだと方法が分からない
   // chunk数で並列数を制限してキャッシュを活用することでAPIリクエスト数を抑える
   async fetchWorkflowFilesByRef(
     workflowRuns: WorkflowRun[],
