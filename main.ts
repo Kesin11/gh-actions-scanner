@@ -46,7 +46,7 @@ const { options, args: _args } = await new Command()
   .option(
     "--host <host:string>",
     "GitHub host. Specify your GHES host If you will use it on GHES",
-    { default: "github.com" },
+    { default: undefined },
   )
   .option(
     "--config <config:string>",
@@ -89,7 +89,11 @@ if (config.isErr()) {
 }
 
 const [owner, repo] = options.repo.split("/");
-const github = new Github({ debug: options.debug });
+const github = new Github({
+  debug: options.debug,
+  token: options.token,
+  host: options.host,
+});
 const created = options.created ??
   `>=${new Date().toISOString().split("T")[0]}`; // Default is yesterday of <YYYY-MM-DD format.
 

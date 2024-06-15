@@ -30,7 +30,7 @@ describe(Github.name, () => {
     });
   });
 
-  describe("Set baseUrl at constructor", () => {
+  describe("Set host at constructor", () => {
     beforeEach(() => {
       // reset env
       Deno.env.delete("GITHUB_API_URL");
@@ -54,6 +54,11 @@ describe(Github.name, () => {
 
     it("Set default baseUrl by default", () => {
       const github = new Github();
+      assertEquals(github.baseUrl, "https://api.github.com");
+    });
+
+    it("Set default baseUrl when host is undefined", () => {
+      const github = new Github({ host: undefined });
       assertEquals(github.baseUrl, "https://api.github.com");
     });
   });
