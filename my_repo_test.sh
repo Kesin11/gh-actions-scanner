@@ -11,7 +11,6 @@ function run {
   signal=$(( $signal + $?))
 }
 run "Kesin11/CIAnalyzer"
-run "Kesin11/ts-junit2json"
 run "Kesin11/junit2json-rs"
 run "Kesin11/actions-timeline"
 run "Kesin11/gh-workflow-ls"
