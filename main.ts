@@ -83,7 +83,7 @@ const jobSummaries = createJobSummaries(
 // console.dir(jobSummaries, { depth: null });
 
 const actionsCacheUsage = await github.fetchActionsCacheUsage(owner, repo);
-const actionsCacheList = await github.fetchActionsCacheList(owner, repo, 5);
+const actionsCacheList = await github.fetchActionsCacheList(owner, repo);
 
 // Scan
 const ruleArgs: RuleArgs = {
