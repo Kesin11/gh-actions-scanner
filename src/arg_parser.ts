@@ -27,7 +27,7 @@ export async function argParse() {
     )
     .option(
       "--created <created:string>",
-      "Returns workflow runs created within the given date-time range. ex: >=YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD. Default is <${YESTERDAY}. For more information on the syntax, see https://docs.github.com/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax#query-for-dates",
+      "Returns workflow runs created within the given date-time range. ex: >=YYYY-MM-DD, YYYY-MM-DD..YYYY-MM-DD. If omit this option, it created by range of recent runs date. For more information on the syntax, see https://docs.github.com/search-github/getting-started-with-searching-on-github/understanding-the-search-syntax#query-for-dates",
       {
         default: undefined,
       },

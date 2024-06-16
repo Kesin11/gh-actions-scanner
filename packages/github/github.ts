@@ -147,6 +147,23 @@ export class Github {
     return workflowJobs;
   }
 
+  async fetchWorkflowRuns(
+    owner: string,
+    repo: string,
+    branch?: string,
+  ): Promise<WorkflowRun[]> {
+    const res = await this.octokit.actions.listWorkflowRunsForRepo(
+      {
+        owner,
+        repo,
+        per_page: 100, // MAX per_page num
+        branch,
+      },
+    );
+    // Ignore some special workflowRuns that have not workflow file. ex: CodeQL
+    return res.data.workflow_runs.filter((run) => run.event !== "dynamic");
+  }
+
   async fetchWorkflowRunsWithCreated(
     owner: string,
     repo: string,

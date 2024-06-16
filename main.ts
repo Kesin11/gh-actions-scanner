@@ -12,6 +12,7 @@ import { filterSeverity, sortRules } from "./src/rules_translator.ts";
 import { loadConfig } from "./src/config.ts";
 import { RuleExecutionError } from "./src/errors.ts";
 import { argParse } from "./src/arg_parser.ts";
+import { generateCreatedDate } from "./src/github_util.ts";
 
 const options = await argParse();
 const config = await loadConfig(options.config);
@@ -26,8 +27,13 @@ const github = new Github({
   token: options.token,
   host: options.host,
 });
-const created = options.created ??
-  `>=${new Date().toISOString().split("T")[0]}`; // Default is yesterday of <YYYY-MM-DD format.
+
+const created = options.created !== undefined
+  ? options.created
+  : await (async () => {
+    const workflowRuns = await github.fetchWorkflowRuns(owner, repo);
+    return generateCreatedDate(workflowRuns);
+  })();
 
 console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
 const workflowRuns = await github.fetchWorkflowRunsWithCreated(
