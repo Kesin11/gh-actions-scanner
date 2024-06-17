@@ -7,6 +7,13 @@ const severityRank = {
   unknown: 3,
 } as const;
 
+export function translateRules(
+  results: RuleResult[],
+  allowSeverities: Severity[],
+): RuleResult[] {
+  return sortRules(filterSeverity(results, allowSeverities));
+}
+
 export function filterSeverity(
   results: RuleResult[],
   allowSeverities: Severity[],

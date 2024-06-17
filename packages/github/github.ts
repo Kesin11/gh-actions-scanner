@@ -198,7 +198,7 @@ export class Github {
   async fetchActionsCacheList(
     owner: string,
     repo: string,
-    perPage: number,
+    perPage = 100, // MAX per_page num
   ): Promise<ActionsCacheList> {
     const res = await this.octokit.actions.getActionsCacheList({
       owner,

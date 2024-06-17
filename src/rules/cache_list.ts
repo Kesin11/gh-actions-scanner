@@ -1,16 +1,32 @@
 import type { RuleArgs, RuleResult } from "./types.ts";
 
+const TOP_N = 10;
+
 const meta = {
   ruleId: "actions-scanner/cache_list",
   ruleUrl: undefined,
   fixable: false,
 };
 
+function formatBytes(bytes?: number): string {
+  if (bytes === undefined) {
+    return "";
+  } else if (bytes < 1024) {
+    return `${bytes} B`;
+  } else if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed()} KB`;
+  } else if (bytes < 1024 * 1024 * 1024) {
+    return `${(bytes / 1024 / 1024).toFixed()} MB`;
+  } else {
+    return "";
+  }
+}
+
 // deno-lint-ignore require-await
 export async function reportCacheList(
   { actionsCacheList }: RuleArgs,
 ): Promise<RuleResult[]> {
-  const topCacheList = actionsCacheList.actions_caches.slice(0, 4);
+  const topCacheList = actionsCacheList.actions_caches.slice(0, TOP_N - 1);
   // console.debug(topCacheList.map((cache) => {
   //   return {
   //     ref: cache.ref,
@@ -23,10 +39,12 @@ export async function reportCacheList(
 
   return [{
     ...meta,
-    description: "List Top 5 cache size",
+    description: `List Top ${TOP_N} cache size`,
     severity: "low",
     messages: topCacheList.map((cache) =>
-      `${cache.ref}: key: ${cache.key}, size: ${cache.size_in_bytes} bytes`
+      `${cache.ref}: key: ${cache.key}, size: ${
+        formatBytes(cache.size_in_bytes)
+      }`
     ),
     data: topCacheList,
   }];

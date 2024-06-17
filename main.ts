@@ -8,7 +8,7 @@ import {
 import { WorkflowModel } from "./packages/workflow_model/src/workflow_file.ts";
 import { Formatter, type FormatterType } from "./src/formatter/formatter.ts";
 import type { RuleArgs, RuleResult } from "./src/rules/types.ts";
-import { filterSeverity, sortRules } from "./src/rules_translator.ts";
+import { translateRules } from "./src/rules_translator.ts";
 import { loadConfig } from "./src/config.ts";
 import { RuleExecutionError } from "./src/errors.ts";
 import { argParse } from "./src/arg_parser.ts";
@@ -83,7 +83,7 @@ const jobSummaries = createJobSummaries(
 // console.dir(jobSummaries, { depth: null });
 
 const actionsCacheUsage = await github.fetchActionsCacheUsage(owner, repo);
-const actionsCacheList = await github.fetchActionsCacheList(owner, repo, 5);
+const actionsCacheList = await github.fetchActionsCacheList(owner, repo);
 
 // Scan
 const ruleArgs: RuleArgs = {
@@ -112,11 +112,10 @@ for (const ruleFunc of config.value.rules) {
 }
 
 // Translate
-const ruleResults = okResults
-  .map((okResult) => okResult.value)
-  .map((results) => filterSeverity(results, options.severity))
-  .map((results) => sortRules(results))
-  .flat();
+const ruleResults = translateRules(
+  okResults.map((okResult) => okResult.value).flat(),
+  options.severity,
+);
 
 // Format
 const formatter = new Formatter(options.format as FormatterType);
