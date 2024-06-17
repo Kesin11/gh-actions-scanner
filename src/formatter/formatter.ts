@@ -95,7 +95,7 @@ export class TableFormatter implements IFormatter {
       data.push([result.messages.join("\n")]);
       if (result.helpMessage) {
         data.push([
-          chalk.gray(`${result.helpMessage}\n\nSee: ${result.ruleUrl}`),
+          chalk.gray(`${result.helpMessage}`),
         ]);
       }
       // {codeUrl} ex: https://github.com/owner/repo/blob/main/file.ts#L1-L2
