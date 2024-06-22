@@ -1,6 +1,8 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { chunk } from "https://deno.land/std@0.224.0/collections/chunk.ts";
-import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
+import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@21.0.0";
+import { throttling } from "npm:@octokit/plugin-throttling@9.3.0";
+import { retry } from "npm:@octokit/plugin-retry@7.1.1";
 
 export type RepositoryResponse =
   RestEndpointMethodTypes["repos"]["get"]["response"]["data"];
@@ -62,10 +64,29 @@ export class Github {
     this.baseUrl = Github.getBaseUrl(options?.host);
     this.isGHES = this.baseUrl !== "https://api.github.com";
     this.token = options?.token ?? Deno.env.get("GITHUB_TOKEN") ?? undefined;
-    this.octokit = new Octokit({
+    const MyOctokit = Octokit.plugin(throttling, retry);
+    this.octokit = new MyOctokit({
       auth: this.token,
       baseUrl: this.baseUrl,
       log: options?.debug ? console : undefined,
+      throttle: {
+        onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+          this.octokit.log.warn(
+            `Request quota exhausted for request ${options.method} ${options.url}`,
+          );
+          // Retry twice after hitting a rate limit error, then give up
+          if (retryCount <= 2) {
+            console.warn(`Retrying after ${retryAfter} seconds!`);
+            return true;
+          }
+        },
+        onSecondaryRateLimit: (_retryAfter, options, _octokit, _retryCount) => {
+          // does not retry, only logs a warning
+          console.warn(
+            `Abuse detected for request ${options.method} ${options.url}`,
+          );
+        },
+      },
     });
   }
 
