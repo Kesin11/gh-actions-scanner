@@ -65,6 +65,11 @@ export async function argParse() {
       { default: undefined },
     )
     .option(
+      "--force-include-schedule [force_include_schedule:boolean]",
+      "Force schedule workflow jobs to be included in the scan. By default, if there are too many schedule jobs, these are filtered.. Default: false",
+      { default: false },
+    )
+    .option(
       "--debug [debug:boolean]",
       "Enable debug log. Default: false",
       { default: false },
