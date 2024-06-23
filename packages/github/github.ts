@@ -59,12 +59,23 @@ export class Github {
   contentCache: Map<string, FileContent> = new Map();
 
   constructor(
-    options?: { token?: string; host?: string; debug?: boolean },
+    options?: {
+      token?: string;
+      host?: string;
+      debug?: boolean;
+      _workaroundDenoTest?: boolean;
+    },
   ) {
     this.baseUrl = Github.getBaseUrl(options?.host);
     this.isGHES = this.baseUrl !== "https://api.github.com";
     this.token = options?.token ?? Deno.env.get("GITHUB_TOKEN") ?? undefined;
-    const MyOctokit = Octokit.plugin(throttling, retry);
+    const MyOctokit = (options?._workaroundDenoTest)
+      // Adding throttling causes "Leaks" error when running `deno test`
+      // error: Leaks detected:
+      // - An interval was started in this test, but never completed. This is often caused by not calling `clearInterval`.
+      // It is unclear whether this is a false positive, but since throttling is not used in tests, a workaround is introduced to avoid adding the plugin.
+      ? Octokit.plugin(retry)
+      : Octokit.plugin(throttling, retry);
     this.octokit = new MyOctokit({
       auth: this.token,
       baseUrl: this.baseUrl,
