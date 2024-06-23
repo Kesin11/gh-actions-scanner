@@ -6,14 +6,12 @@ on:
   pull_request:
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pull-requests: write
-
 jobs:
   check:
-    timeout-minutes: 5
-    runs-on: [cloudrun]
+    runs-on: [ubuntu-latest]
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
       - name: Set .tool-versions to output
@@ -31,8 +29,10 @@ jobs:
       - id: test
         run: deno test -A
   my_repo_test:
-    timeout-minutes: 5
-    runs-on: [cloudrun]
+    timeout-minutes: 10
+    runs-on: [ubuntu-latest]
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Set .tool-versions to output
@@ -45,4 +45,4 @@ jobs:
       
       - run: deno task my_repo_test
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_PAT }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
