@@ -1,6 +1,8 @@
 import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
 import { chunk } from "https://deno.land/std@0.224.0/collections/chunk.ts";
-import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@20.0.2";
+import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@21.0.0";
+import { throttling } from "npm:@octokit/plugin-throttling@9.3.0";
+import { retry } from "npm:@octokit/plugin-retry@7.1.1";
 
 export type RepositoryResponse =
   RestEndpointMethodTypes["repos"]["get"]["response"]["data"];
@@ -57,15 +59,45 @@ export class Github {
   contentCache: Map<string, FileContent> = new Map();
 
   constructor(
-    options?: { token?: string; host?: string; debug?: boolean },
+    options?: {
+      token?: string;
+      host?: string;
+      debug?: boolean;
+      _workaroundDenoTest?: boolean;
+    },
   ) {
     this.baseUrl = Github.getBaseUrl(options?.host);
     this.isGHES = this.baseUrl !== "https://api.github.com";
     this.token = options?.token ?? Deno.env.get("GITHUB_TOKEN") ?? undefined;
-    this.octokit = new Octokit({
+    const MyOctokit = (options?._workaroundDenoTest)
+      // Adding throttling causes "Leaks" error when running `deno test`
+      // error: Leaks detected:
+      // - An interval was started in this test, but never completed. This is often caused by not calling `clearInterval`.
+      // It is unclear whether this is a false positive, but since throttling is not used in tests, a workaround is introduced to avoid adding the plugin.
+      ? Octokit.plugin(retry)
+      : Octokit.plugin(throttling, retry);
+    this.octokit = new MyOctokit({
       auth: this.token,
       baseUrl: this.baseUrl,
       log: options?.debug ? console : undefined,
+      throttle: {
+        onRateLimit: (retryAfter, options, _octokit, retryCount) => {
+          this.octokit.log.warn(
+            `Request quota exhausted for request ${options.method} ${options.url}`,
+          );
+          // Retry twice after hitting a rate limit error, then give up
+          if (retryCount <= 2) {
+            console.warn(`Retrying after ${retryAfter} seconds!`);
+            return true;
+          }
+        },
+        onSecondaryRateLimit: (_retryAfter, options, _octokit, _retryCount) => {
+          // does not retry, only logs a warning
+          console.warn(
+            `Abuse detected for request ${options.method} ${options.url}`,
+          );
+        },
+      },
     });
   }
 
