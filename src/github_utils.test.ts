@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.212.0/assert/mod.ts";
 import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
-import { generateCreatedDate } from "./github_util.ts";
+import { filterScheduleRuns, generateCreatedDate } from "./github_util.ts";
 import type { WorkflowRun } from "../packages/github/github.ts";
 
 const newestDate = "2024-06-14T23:59:50Z";
@@ -52,5 +52,57 @@ describe(generateCreatedDate.name, () => {
       { created_at: "2024-05-14T00:00:00Z" },
     ] as unknown as WorkflowRun[];
     assertEquals(generateCreatedDate(workflowRuns), ">=2024-05-14");
+  });
+});
+
+describe(filterScheduleRuns.name, () => {
+  describe("when forceIncludeSchedule === true", () => {
+    it("Include schedule events", () => {
+      const workflowRuns = [
+        { id: 1, event: "push" },
+        { id: 2, event: "schedule" },
+      ] as unknown as WorkflowRun[];
+
+      const actual = filterScheduleRuns(workflowRuns, true);
+      assertEquals(actual, { filterd: false, workflowRuns });
+    });
+  });
+
+  describe("when forceIncludeSchedule === false", () => {
+    it("Include all except schedule events", () => {
+      const workflowRuns = [
+        { id: 1, event: "push" },
+        { id: 2, event: "pull_request" },
+      ] as unknown as WorkflowRun[];
+
+      const actual = filterScheduleRuns(workflowRuns, false);
+      assertEquals(actual, { filterd: false, workflowRuns });
+    });
+
+    it("Include schedule event if workflowRuns have less than 50% schedule event ", () => {
+      const workflowRuns = [
+        { id: 1, event: "push" },
+        { id: 2, event: "push" },
+        { id: 3, event: "schedule" },
+        { id: 4, event: "push" },
+      ] as unknown as WorkflowRun[];
+
+      const actual = filterScheduleRuns(workflowRuns, false);
+      assertEquals(actual, { filterd: false, workflowRuns: workflowRuns });
+    });
+
+    it("Exclude schedule event if workflowRuns have more than 50% schedule event ", () => {
+      const workflowRuns = [
+        { id: 1, event: "push" },
+        { id: 2, event: "push" },
+        { id: 3, event: "schedule" },
+        { id: 4, event: "schedule" },
+        { id: 5, event: "schedule" },
+      ] as unknown as WorkflowRun[];
+
+      const actual = filterScheduleRuns(workflowRuns, false);
+      const expected = [workflowRuns[0], workflowRuns[1]];
+      assertEquals(actual, { filterd: true, workflowRuns: expected });
+    });
   });
 });

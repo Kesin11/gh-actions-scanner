@@ -25,3 +25,20 @@ export function generateCreatedDate(workflowRuns: WorkflowRun[]): string {
     return `>=${monthAgo.toISOString().split("T")[0]}`;
   }
 }
+
+// workflowRunsのトリガーがscheduleのものが全体の50%以上を占める場合、それらを除外する
+export function filterScheduleRuns(
+  workflowRuns: WorkflowRun[],
+  forceIncludeSchedule: boolean,
+): { filterd: boolean; workflowRuns: WorkflowRun[] } {
+  if (forceIncludeSchedule) return { filterd: false, workflowRuns };
+
+  const scheduleRuns = workflowRuns.filter((it) => it.event === "schedule");
+  if (scheduleRuns.length / workflowRuns.length > 0.5) {
+    return {
+      filterd: true,
+      workflowRuns: workflowRuns.filter((it) => it.event !== "schedule"),
+    };
+  }
+  return { filterd: false, workflowRuns };
+}

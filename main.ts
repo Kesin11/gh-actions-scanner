@@ -12,7 +12,7 @@ import { translateRules } from "./src/rules_translator.ts";
 import { loadConfig } from "./src/config.ts";
 import { RuleExecutionError } from "./src/errors.ts";
 import { argParse } from "./src/arg_parser.ts";
-import { generateCreatedDate } from "./src/github_util.ts";
+import { filterScheduleRuns, generateCreatedDate } from "./src/github_util.ts";
 
 const options = await argParse();
 const config = await loadConfig(options.config);
@@ -36,7 +36,7 @@ const created = options.created !== undefined
   })();
 
 console.debug(`owner: ${owner}, repo: ${repo}, created: ${created}`);
-const workflowRuns = await github.fetchWorkflowRunsWithCreated(
+let workflowRuns = await github.fetchWorkflowRunsWithCreated(
   owner,
   repo,
   created,
@@ -46,6 +46,16 @@ if (workflowRuns.length === 0) {
     "No workflow runs found. Try expanding the range of dates in the --created option.",
   );
   Deno.exit(1);
+}
+const { filterd, workflowRuns: filterdWorkflowRuns } = filterScheduleRuns(
+  workflowRuns,
+  options.forceIncludeSchedule,
+);
+workflowRuns = filterdWorkflowRuns;
+if (filterd) {
+  console.log(
+    "Schedule runs are excluded because they are more than 50% of the total.",
+  );
 }
 
 const workflowRunUsages = await github.fetchWorkflowRunUsages(workflowRuns);
