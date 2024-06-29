@@ -13,12 +13,12 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Set .tool-versions to output
         id: tool-versions
         run: awk '{ print $1"="$2 }' .tool-versions >> $GITHUB_OUTPUT
         shell: bash
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@041b854f97b325bd60e53e9dc2de9cb9f9ac0cba # v1.1.4
         with:
           deno-version: v${{ steps.tool-versions.outputs.deno }}
 
@@ -34,12 +34,12 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Set .tool-versions to output
         id: tool-versions
         run: awk '{ print $1"="$2 }' .tool-versions >> $GITHUB_OUTPUT
         shell: bash
-      - uses: denoland/setup-deno@v1
+      - uses: denoland/setup-deno@041b854f97b325bd60e53e9dc2de9cb9f9ac0cba # v1.1.4
         with:
           deno-version: v${{ steps.tool-versions.outputs.deno }}
       
