@@ -8,6 +8,6 @@
   "deno.cacheOnSave": true,
   "editor.formatOnSave": true,
   "[markdown]": {
-    "editor.formatOnSave": false,
+    "editor.formatOnSave": false
   }
 }

@@ -5,6 +5,7 @@
 `gh-actions-scanner` is also a framework that allows you to run custom rules that extend the capabilities of the scanner.
 
 ## Still under development :warning:
+
 `gh-actions-scanner` is still under development. The API and CLI options may change in the future untill stable version 1.x released.
 
 ## USAGE
@@ -17,6 +18,7 @@ deno run -A main.ts -R ORG/REPO
 ```
 
 ## Sample output
+
 ```bash
 $ deno run -A main.ts -R moby/buildkit --created ">=2024-06-25"
 Load included default config.
@@ -104,6 +106,7 @@ Options:
 ```
 
 ## Support GHES
+
 `gh-actions-scanner` can also work on GitHub Enterprise Server(GHES). It needs `--host` option and GitHub token for your GHES.
 
 ```bash
