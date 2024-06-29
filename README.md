@@ -1,8 +1,11 @@
 # gh-actions-scanner
 
-`gh-actions-scanner` is a tool for scanning the GitHub repository for GitHub Actions. It's not a linter, but a scanner that provides insight into GitHub Actions performance and usage.
+`gh-actions-scanner` is a tool for scanning the GitHub repository for GitHub Actions. It's not a linter, but a scanner that provides insight into the performance and usage of GitHub Actions performance.
 
 `gh-actions-scanner` is also a framework that allows you to run custom rules that extend the capabilities of the scanner.
+
+## Still under development :warning:
+`gh-actions-scanner` is still under development. The API and CLI options may change in the future untill stable version 1.x released.
 
 ## USAGE
 
@@ -12,8 +15,6 @@ deno run -A main.ts --token=$(gh auth token) -R ORG/REPO
 export GITHUB_TOKEN=$(gh auth token)
 deno run -A main.ts -R ORG/REPO
 ```
-
-
 
 ## Sample output
 ```bash
@@ -113,19 +114,19 @@ deno run -A main.ts -R ORG/REPO \
 
 ## Config file
 
-`gh-actions-scanner` is designed working well with no option. However if you want to customize the behavior of `gh-actions-scanner`, you can provide your configuration file. Refer to the [actions-scanner.config.sample.ts](./actions-scanner.config.sample.ts) for a sample configuration.
+`gh-actions-scanner` is designed working well with no option. However if you want to customize the behavior of `gh-actions-scanner`, you can provide your configuration file. See [actions-scanner.config.sample.ts](./actions-scanner.config.sample.ts) for a sample configuration.
 
-`gh-actions-scanner` load `actions-scanner.config.ts` file from the current directory. If you want to use other file, you can use `--config` option.
+`gh-actions-scanner` loads `actions-scanner.config.ts` file from the current directory. If you want to use a specific file, you can use `--config` option.
 
-The config is insipred by [ESLint flat config](https://eslint.org/docs/latest/use/configure/configuration-files), so you can choose which rules `gh-actions-scanner` use for verifying by JavaScript native import syntax. And thanks to [Deno import feature](https://docs.deno.com/runtime/manual/basics/modules/), the config file allows you to import custom rules that published to npm/jsr/GitHub or anywehere.
+The config is insipred by [ESLint flat config](https://eslint.org/docs/latest/use/configure/configuration-files), so you can choose which rules `gh-actions-scanner` use to verify by JavaScript native import syntax. And thanks to [Deno import feature](https://docs.deno.com/runtime/manual/basics/modules/), the config file allows you to import custom rules that are published on npm/jsr/GitHub or elsewhere.
 
 ```typescript
 // If you import private repository, you need to set PAT.
 // export DENO_AUTH_TOKENS=$(gh auth token)@raw.githubusercontent.com
 // ref: https://docs.deno.com/runtime/manual/basics/modules/private
 
-import { reportWorkflowUsage } from "https://raw.githubusercontent.com/kesin11-private/gh-actions-scanner/main/src/rules/workflow_run_usage.ts";
-import { RuleFunc } from "https://raw.githubusercontent.com/kesin11-private/gh-actions-scanner/main/src/rules/types.ts";
+import { reportWorkflowUsage } from "https://raw.githubusercontent.com/your-private-org/gh-actions-scanner/main/src/rules/workflow_run_usage.ts";
+import { RuleFunc } from "https://raw.githubusercontent.com/your-private-org/gh-actions-scanner/main/src/rules/types.ts";
 
 type Config = {
   rules: RuleFunc[];
@@ -141,7 +142,7 @@ export default config;
 
 ## Create Custom rule
 
-To create a custom rule, implement a function that follows the `RuleFunc` interface defined in [src/rules/types.ts](./src/rules/types.ts) then push to some repository or publish to npm/jsr. You can then import your custom rule from the configuration file.
+To create a custom rule, implement a function that follows the `RuleFunc` interface defined in [src/rules/types.ts](./src/rules/types.ts), then push it to a repository or publish it to npm/jsr. You can then import your custom rule from the configuration file.
 
 ## Development
 
@@ -154,8 +155,6 @@ deno run -A main.ts --token=$(gh auth token) -R ORG/REPO --debug
 ```
 
 ## Roadmap
-
-Future plans for gh-actions-scanner include adding more built-in rules, improving documentation, and supporting more complex scanning scenarios.
 
 - [ ] Add custom rule example code.
 - [ ] Release as gh extensions.
