@@ -36,12 +36,11 @@ export async function checkTooShortBillableJob(
   return reportedJobs.map(({ job, runner }) => {
     return {
       ...meta,
-      description: "Job time shorter than minimum charge unit 60sec",
+      description:
+        "A Job that using larger runner median duration time shorter than minimum charge unit 60sec",
       severity: "medium",
       messages: [
-        `workflow: "${job.workflowModel?.name}", job "${job.jobModel?.id}" median duration is ${
-          job.billableStatSecs[runner].median
-        }sec.`,
+        `runner: ${runner}, workflow: "${job.workflowModel?.name}", job "${job.jobModel?.id}" median duration is ${job.durationStatSecs.median}sec.`,
       ],
       helpMessage:
         `Recommend to merge with other jobs or using standard runner: workflow: "${job.workflowModel?.name}", job: "${job.jobModel?.id}", runner: ${runner}`,
@@ -49,8 +48,8 @@ export async function checkTooShortBillableJob(
       data: {
         workflow: job.workflowModel?.name,
         job: job.jobModel?.id,
+        durationStatSecs: job.durationStatSecs,
         runner,
-        billableStatSecs: job.billableStatSecs[runner],
       },
     };
   });
