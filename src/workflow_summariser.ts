@@ -81,7 +81,7 @@ export function createRunSummaries(
 
   return runsSummary;
 }
-type RunnerType = string;
+type RunnerType = "UBUNTU" | "WINDOWS" | "MACOS" | string;
 export type JobSummary = {
   workflowName: string;
   jobNameOrId: string;
@@ -201,15 +201,15 @@ function createStepSummaries(
 //  }
 // }
 export type JobsBillableById = Record<string, {
-  runner: string;
+  runner: RunnerType;
   duration_ms: number;
 }>;
 export function createJobsBillableById(
   workflowRunUsages: Array<WorkflowRunUsage | undefined>,
 ): JobsBillableById {
   const jobsBillableSummary: Record<
-    string,
-    { runner: string; duration_ms: number }
+    string, // job_id
+    { runner: RunnerType; duration_ms: number }
   > = {};
   for (const workflowRunUsage of workflowRunUsages) {
     if (workflowRunUsage === undefined) continue;
@@ -249,13 +249,13 @@ export function createJobsBillableStat(
 ): JobsBillableStat {
   const jobsBillable = jobIds.map((jobId) => jobsBillableById[jobId])
     .filter((jobBillable) => jobBillable !== undefined);
-  const jobsBIllableGroup = Object.groupBy(
+  const jobsBillableGroup = Object.groupBy(
     jobsBillable,
     (billable) => billable.runner,
   );
   const summary: JobsBillableStat = {};
-  for (const runner of Object.keys(jobsBIllableGroup)) {
-    const durationSecs = jobsBIllableGroup[runner]!.map((billable) =>
+  for (const runner of Object.keys(jobsBillableGroup)) {
+    const durationSecs = jobsBillableGroup[runner]!.map((billable) =>
       billable.duration_ms / 1000
     );
     summary[runner] = createDurationStat(durationSecs);
