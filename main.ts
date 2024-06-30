@@ -41,6 +41,7 @@ let workflowRuns = await github.fetchWorkflowRunsWithCreated(
   repo,
   created,
 );
+workflowRuns = workflowRuns.filter((it) => it.status === "completed");
 if (workflowRuns.length === 0) {
   console.error(
     "No workflow runs found. Try expanding the range of dates in the --created option.",
