@@ -1,9 +1,9 @@
-import { basename } from "https://deno.land/std@0.221.0/path/basename.ts";
+import { basename } from "https://deno.land/std@0.224.0/path/basename.ts";
 import {
   assertEquals,
   assertGreater,
-} from "https://deno.land/std@0.212.0/assert/mod.ts";
-import { describe, it } from "https://deno.land/std@0.212.0/testing/bdd.ts";
+} from "https://deno.land/std@0.224.0/assert/mod.ts";
+import { describe, it } from "https://deno.land/std@0.224.0/testing/bdd.ts";
 import { checkCheckoutFilterBlobNone } from "./step_actions_checkout_depth0.ts";
 import type { JobSummary } from "../workflow_summariser.ts";
 import type { RuleArgs } from "./types.ts";

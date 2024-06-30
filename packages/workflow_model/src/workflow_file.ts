@@ -1,5 +1,5 @@
-import { parse } from "https://deno.land/std@0.212.0/yaml/parse.ts";
-import { zip } from "https://deno.land/std@0.218.2/collections/zip.ts";
+import { parse } from "https://deno.land/std@0.224.0/yaml/parse.ts";
+import { zip } from "https://deno.land/std@0.224.0/collections/zip.ts";
 import { FileContent } from "../../github/github.ts";
 import { JobAst, StepAst, WorkflowAst } from "./workflow_ast.ts";
 

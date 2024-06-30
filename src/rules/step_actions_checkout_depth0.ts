@@ -1,6 +1,6 @@
 import type { RuleArgs, RuleResult } from "./types.ts";
-import { distinctBy } from "https://deno.land/std@0.218.2/collections/distinct_by.ts";
-import { stringify } from "https://deno.land/std@0.212.0/yaml/stringify.ts";
+import { distinctBy } from "https://deno.land/std@0.224.0/collections/distinct_by.ts";
+import { stringify } from "https://deno.land/std@0.224.0/yaml/stringify.ts";
 
 const meta = {
   ruleId: "actions-scanner/step_action_checkout_depth0",
