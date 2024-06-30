@@ -37,6 +37,7 @@ jobs:
     concurrency:
       # my_repo_test too consume API limit, so limit concurrency to 1
       group: my_repo_test
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Set .tool-versions to output
