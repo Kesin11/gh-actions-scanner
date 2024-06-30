@@ -1,9 +1,9 @@
-import { assertEquals } from "https://deno.land/std@0.212.0/assert/mod.ts";
+import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import {
   beforeEach,
   describe,
   it,
-} from "https://deno.land/std@0.212.0/testing/bdd.ts";
+} from "https://deno.land/std@0.224.0/testing/bdd.ts";
 import { reportWorkflowRetryRuns } from "./workflow_retry_runs.ts";
 import type { RunSummary } from "../workflow_summariser.ts";
 import type { RuleArgs } from "./types.ts";

@@ -1,4 +1,4 @@
-import { decodeBase64 } from "https://deno.land/std@0.212.0/encoding/base64.ts";
+import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { chunk } from "https://deno.land/std@0.224.0/collections/chunk.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@21.0.0";
 import { throttling } from "npm:@octokit/plugin-throttling@9.3.0";
