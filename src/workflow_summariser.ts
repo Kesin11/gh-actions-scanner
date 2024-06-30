@@ -208,7 +208,7 @@ export function createJobsBillableById(
   workflowRunUsages: Array<WorkflowRunUsage | undefined>,
 ): JobsBillableById {
   const jobsBillableSummary: Record<
-    string,
+    string, // job_id
     { runner: string; duration_ms: number }
   > = {};
   for (const workflowRunUsage of workflowRunUsages) {
@@ -249,13 +249,13 @@ export function createJobsBillableStat(
 ): JobsBillableStat {
   const jobsBillable = jobIds.map((jobId) => jobsBillableById[jobId])
     .filter((jobBillable) => jobBillable !== undefined);
-  const jobsBIllableGroup = Object.groupBy(
+  const jobsBillableGroup = Object.groupBy(
     jobsBillable,
     (billable) => billable.runner,
   );
   const summary: JobsBillableStat = {};
-  for (const runner of Object.keys(jobsBIllableGroup)) {
-    const durationSecs = jobsBIllableGroup[runner]!.map((billable) =>
+  for (const runner of Object.keys(jobsBillableGroup)) {
+    const durationSecs = jobsBillableGroup[runner]!.map((billable) =>
       billable.duration_ms / 1000
     );
     summary[runner] = createDurationStat(durationSecs);
