@@ -28,11 +28,15 @@ jobs:
         run: deno lint
       - id: test
         run: deno test -A
+
   my_repo_test:
     timeout-minutes: 10
     runs-on: [ubuntu-latest]
     permissions:
       contents: read
+    concurrency:
+      # my_repo_test too consume API limit, so limit concurrency to 1
+      group: my_repo_test
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332 # v4.1.7
       - name: Set .tool-versions to output
