@@ -81,7 +81,7 @@ export function createRunSummaries(
 
   return runsSummary;
 }
-type RunnerType = string;
+type RunnerType = "UBUNTU" | "WINDOWS" | "MACOS" | string;
 export type JobSummary = {
   workflowName: string;
   jobNameOrId: string;
@@ -201,7 +201,7 @@ function createStepSummaries(
 //  }
 // }
 export type JobsBillableById = Record<string, {
-  runner: string;
+  runner: RunnerType;
   duration_ms: number;
 }>;
 export function createJobsBillableById(
@@ -209,7 +209,7 @@ export function createJobsBillableById(
 ): JobsBillableById {
   const jobsBillableSummary: Record<
     string, // job_id
-    { runner: string; duration_ms: number }
+    { runner: RunnerType; duration_ms: number }
   > = {};
   for (const workflowRunUsage of workflowRunUsages) {
     if (workflowRunUsage === undefined) continue;
