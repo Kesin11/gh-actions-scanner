@@ -6,7 +6,7 @@ import type { WorkflowRun } from "../packages/github/github.ts";
 const newestDate = "2024-06-14T23:59:50Z";
 
 describe(generateCreatedDate.name, () => {
-  it(">=${YESTERDAY} when oldestDate is today", () => {
+  it(">=${TODAY} when oldestDate is today", () => {
     const workflowRuns = [
       { created_at: newestDate },
       { created_at: "2024-06-14:00:00:00Z" },
@@ -14,12 +14,12 @@ describe(generateCreatedDate.name, () => {
     assertEquals(generateCreatedDate(workflowRuns), ">=2024-06-14");
   });
 
-  it(">=${1WEEK AGO} when oldestDate is yesterday", () => {
+  it(">=${3DAYS AGO} when oldestDate is yesterday", () => {
     const workflowRuns = [
       { created_at: newestDate },
       { created_at: "2024-06-13T00:00:00Z" },
     ] as unknown as WorkflowRun[];
-    assertEquals(generateCreatedDate(workflowRuns), ">=2024-06-07");
+    assertEquals(generateCreatedDate(workflowRuns), ">=2024-06-11");
   });
 
   it(">=${1WEEK AGO} when oldestDate is 6days ago", () => {
@@ -30,12 +30,12 @@ describe(generateCreatedDate.name, () => {
     assertEquals(generateCreatedDate(workflowRuns), ">=2024-06-07");
   });
 
-  it(">=${1MONTH AGO} when oldestDate is 1week ago", () => {
+  it(">=${2WEEKS AGO} when oldestDate is 1week ago", () => {
     const workflowRuns = [
       { created_at: newestDate },
       { created_at: "2024-06-07T00:00:00Z" },
     ] as unknown as WorkflowRun[];
-    assertEquals(generateCreatedDate(workflowRuns), ">=2024-05-14");
+    assertEquals(generateCreatedDate(workflowRuns), ">=2024-05-31");
   });
 
   it(">=${1MONTH AGO} when oldestDate is 30days ago", () => {
