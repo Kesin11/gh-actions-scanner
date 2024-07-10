@@ -18,7 +18,7 @@ function formatBytes(bytes?: number): string {
   } else if (bytes < 1024 * 1024 * 1024) {
     return `${(bytes / 1024 / 1024).toFixed()} MB`;
   } else {
-    return "";
+    return `${(bytes / 1024 / 1024 / 1024).toPrecision(2)} GB`;
   }
 }
 
