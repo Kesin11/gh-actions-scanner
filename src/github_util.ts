@@ -1,4 +1,9 @@
-import type { WorkflowRun } from "../packages/github/github.ts";
+import { runLengthDecode } from "https://deno.land/std@0.196.0/console/_rle.ts";
+import type {
+  Github,
+  WorkflowJobs,
+  WorkflowRun,
+} from "../packages/github/github.ts";
 
 // Generate a date range based on the oldest "created_at" value in workflowRuns
 export function generateCreatedDate(workflowRuns: WorkflowRun[]): string {
@@ -44,4 +49,53 @@ export function filterScheduleRuns(
     };
   }
   return { filterd: false, workflowRuns };
+}
+
+export async function fetchWorkflowJobsWithCache(
+  github: Github,
+  workflowRuns: WorkflowRun[],
+  enableCache: boolean,
+): Promise<WorkflowJobs> {
+  if (!enableCache) return github.fetchWorkflowJobs(workflowRuns);
+
+  const workflowJobsFromCache: WorkflowJobs = [];
+  const notCachedWorkflowRuns: WorkflowRun[] = [];
+
+  // Setup DenoKV
+  const kv = await Deno.openKv();
+
+  // Read from DenoKV
+  for (const run of workflowRuns) {
+    const keys = [
+      run.repository.owner.login,
+      run.repository.name,
+      run.id,
+      run.run_attempt ?? 1,
+    ];
+    const entry = await kv.get<WorkflowJobs[0]>(keys);
+    if (entry) {
+      workflowJobsFromCache.push(entry.value);
+    } else {
+      notCachedWorkflowRuns.push(run);
+    }
+  }
+
+  // If cache does not exist, fetch and store it
+  const workflowJobs = await github.fetchWorkflowJobs(notCachedWorkflowRuns);
+  // for (const [i, run] of notCachedWorkflowRuns.entries()) {
+  //   const keys = [
+  //     run.repository.owner.login,
+  //     run.repository.name,
+  //     run.id,
+  //     run.run_attempt ?? 1,
+  //   ];
+  //   await kv.set(keys, workflowJobs[i]);
+  // }
+
+  // ここまで書いて気がついたのだが、fetchWorkflowJobs()だとworkflowRunとworkflowJobがN:Nの関係になっている
+  // せめて1:Nの関係にならないとキャッシュの保存ができないので、fetchWorkflowJobs()の使い方から考え直す必要がある
+
+  // Store to DenoKV but not awaiting
+
+  return workflowJobs;
 }

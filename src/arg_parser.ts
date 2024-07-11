@@ -70,6 +70,11 @@ export async function argParse() {
       { default: false },
     )
     .option(
+      "--cache [force_include_schedule:boolean]",
+      "Enable cache some GitHub API result to external SQLite. Currently TTL is fixed to 1day. Default: true",
+      { default: true },
+    )
+    .option(
       "--debug [debug:boolean]",
       "Enable debug log. Default: false",
       { default: false },
