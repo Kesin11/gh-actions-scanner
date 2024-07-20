@@ -1,6 +1,6 @@
 import { type FileContent, Github } from "./packages/github/github.ts";
-import { fromPromise } from "npm:neverthrow@6.2.2";
-import type { Err, Ok } from "npm:neverthrow@6.2.2";
+import { fromPromise } from "npm:neverthrow@7.0.0";
+import type { Err, Ok } from "npm:neverthrow@7.0.0";
 import {
   createJobSummaries,
   createRunSummaries,
