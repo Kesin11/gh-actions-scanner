@@ -1,7 +1,4 @@
-import type {
-  ActionsCacheList,
-  ActionsCacheUsage,
-} from "../../packages/github/github.ts";
+import type { ActionsCacheList, ActionsCacheUsage } from "@kesin11/gha-utils";
 import type { JobSummary, RunSummary } from "../workflow_summariser.ts";
 
 export const severityList = ["high", "medium", "low", "unknown"] as const;

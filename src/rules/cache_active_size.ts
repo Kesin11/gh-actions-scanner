@@ -1,5 +1,5 @@
 import type { RuleArgs, RuleResult } from "./types.ts";
-import type { ActionsCacheUsage } from "../../packages/github/github.ts";
+import type { ActionsCacheUsage } from "@kesin11/gha-utils";
 
 export const THRESHOLD_CACHE_SIZE_GB = 9;
 

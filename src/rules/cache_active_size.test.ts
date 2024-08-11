@@ -8,7 +8,7 @@ import {
   reportActiveCache,
   THRESHOLD_CACHE_SIZE_GB,
 } from "./cache_active_size.ts";
-import type { ActionsCacheUsage } from "../../packages/github/github.ts";
+import type { ActionsCacheUsage } from "@kesin11/gha-utils";
 import type { RuleArgs } from "./types.ts";
 
 describe("cache_active_size", () => {
