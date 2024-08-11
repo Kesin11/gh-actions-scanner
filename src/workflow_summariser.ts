@@ -1,14 +1,10 @@
 import { max, median, min, quantile } from "npm:simple-statistics@7.8.3";
-import {
-  JobModel,
-  StepModel,
-  WorkflowModel,
-} from "../packages/workflow_model/src/workflow_file.ts";
+import { JobModel, StepModel, WorkflowModel } from "@kesin11/gha-utils";
 import {
   WorkflowJobs,
   WorkflowRun,
   WorkflowRunUsage,
-} from "../packages/github/github.ts";
+} from "@kesin11/gha-utils";
 
 type DurationStat = {
   min: number | undefined;

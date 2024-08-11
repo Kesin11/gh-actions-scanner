@@ -1,4 +1,4 @@
-import type { WorkflowRun } from "../packages/github/github.ts";
+import type { WorkflowRun } from "@kesin11/gha-utils";
 
 // Generate a date range based on the oldest "created_at" value in workflowRuns
 export function generateCreatedDate(workflowRuns: WorkflowRun[]): string {

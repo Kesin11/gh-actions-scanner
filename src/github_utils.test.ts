@@ -1,7 +1,7 @@
 import { assertEquals } from "https://deno.land/std@0.224.0/assert/mod.ts";
 import { describe, it } from "https://deno.land/std@0.224.0/testing/bdd.ts";
 import { filterScheduleRuns, generateCreatedDate } from "./github_util.ts";
-import type { WorkflowRun } from "../packages/github/github.ts";
+import type { WorkflowRun } from "@kesin11/gha-utils";
 
 const newestDate = "2024-06-14T23:59:50Z";
 

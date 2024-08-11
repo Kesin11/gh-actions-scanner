@@ -1,11 +1,11 @@
-import { type FileContent, Github } from "./packages/github/github.ts";
+import { type FileContent, Github } from "@kesin11/gha-utils";
 import { fromPromise } from "npm:neverthrow@7.0.0";
 import type { Err, Ok } from "npm:neverthrow@7.0.0";
 import {
   createJobSummaries,
   createRunSummaries,
 } from "./src/workflow_summariser.ts";
-import { WorkflowModel } from "./packages/workflow_model/src/workflow_file.ts";
+import { WorkflowModel } from "@kesin11/gha-utils";
 import { Formatter, type FormatterType } from "./src/formatter/formatter.ts";
 import type { RuleArgs, RuleResult } from "./src/rules/types.ts";
 import { translateRules } from "./src/rules_translator.ts";
