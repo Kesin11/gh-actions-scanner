@@ -1,7 +1,7 @@
 import { decodeBase64 } from "https://deno.land/std@0.224.0/encoding/base64.ts";
 import { chunk } from "https://deno.land/std@0.224.0/collections/chunk.ts";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@21.0.2";
-import { throttling } from "npm:@octokit/plugin-throttling@9.3.1";
+import { throttling } from "npm:@octokit/plugin-throttling@9.3.2";
 import { retry } from "npm:@octokit/plugin-retry@7.1.2";
 
 export type RepositoryResponse =
