@@ -1,4 +1,4 @@
-import { existsSync } from "https://deno.land/std@0.224.0/fs/exists.ts";
+import { existsSync } from "@std/fs";
 import { fromPromise, type Result } from "npm:neverthrow@8.0.0";
 import type { Config } from "./rules/types.ts";
 
