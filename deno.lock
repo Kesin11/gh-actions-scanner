@@ -18,7 +18,9 @@
       "npm:chalk@5.3.0": "npm:chalk@5.3.0",
       "npm:neverthrow@6.2.2": "npm:neverthrow@6.2.2",
       "npm:neverthrow@7.0.0": "npm:neverthrow@7.0.0",
+      "npm:neverthrow@8.0.0": "npm:neverthrow@8.0.0",
       "npm:simple-statistics@7.8.3": "npm:simple-statistics@7.8.3",
+      "npm:simple-statistics@7.8.5": "npm:simple-statistics@7.8.5",
       "npm:structured-source@4.0.0": "npm:structured-source@4.0.0",
       "npm:structured-source@^4.0.0": "npm:structured-source@4.0.0",
       "npm:table@6.8.1": "npm:table@6.8.1",
@@ -348,6 +350,10 @@
         "integrity": "sha512-GDDz+SQGGZWIGYk3cL2Jf+RX7QYRJOsQltrbpBiSQiNVN4QJi3/YJhaZY4pRlDou+W3YSHk8DYBKMt4CDPBglg==",
         "dependencies": {}
       },
+      "neverthrow@8.0.0": {
+        "integrity": "sha512-SX2Z50+U27I+CF3NwHE9J8MB6+bYRRub3U+1nAKxnL6c+2vW2l/WsYEC0e3Wqg8DwiJvrquqE0YhxlVTzGJGsg==",
+        "dependencies": {}
+      },
       "once@1.4.0": {
         "integrity": "sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==",
         "dependencies": {
@@ -364,6 +370,10 @@
       },
       "simple-statistics@7.8.3": {
         "integrity": "sha512-JFvMY00t6SBGtwMuJ+nqgsx9ylkMiJ5JlK9bkj8AdvniIe5615wWQYkKHXe84XtSuc40G/tlrPu0A5/NlJvv8A==",
+        "dependencies": {}
+      },
+      "simple-statistics@7.8.5": {
+        "integrity": "sha512-yw4aOnkvPLbL80zamrEKznAnk5cIIkjEcx/z0aQl+m/YKMmVufrnWgWJWRspqZtwh+ElZXRhJ0MtnUjFUQV5Ow==",
         "dependencies": {}
       },
       "slice-ansi@4.0.0": {
