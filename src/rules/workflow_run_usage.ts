@@ -1,4 +1,4 @@
-import { sumOf } from "https://deno.land/std@0.224.0/collections/sum_of.ts";
+import { sumOf } from "@std/collections";
 import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {

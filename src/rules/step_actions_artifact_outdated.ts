@@ -1,5 +1,5 @@
-import { distinctBy } from "https://deno.land/std@0.224.0/collections/distinct_by.ts";
-import { stringify } from "https://deno.land/std@0.224.0/yaml/stringify.ts";
+import { distinctBy } from "@std/collections";
+import { stringify } from "@std/yaml";
 import type { RuleArgs, RuleResult } from "./types.ts";
 
 const meta = {
