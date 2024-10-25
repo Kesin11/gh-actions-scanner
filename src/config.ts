@@ -1,5 +1,5 @@
 import { existsSync } from "@std/fs";
-import { fromPromise, type Result } from "npm:neverthrow@8.0.0";
+import { fromPromise, type Result } from "npm:neverthrow@8.1.1";
 import type { Config } from "./rules/types.ts";
 
 type ConfigFile = {
