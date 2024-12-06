@@ -1,6 +1,6 @@
 import type { RuleResult } from "../rules/types.ts";
 import chalk from "npm:chalk@5.3.0";
-import { getBorderCharacters, table, TableUserConfig } from "npm:table@6.8.2";
+import { getBorderCharacters, table, TableUserConfig } from "npm:table@6.9.0";
 
 export const formatterList = ["json", "table"] as const;
 export type FormatterType = typeof formatterList[number];
