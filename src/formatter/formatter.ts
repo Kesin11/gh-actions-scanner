@@ -1,5 +1,5 @@
 import type { RuleResult } from "../rules/types.ts";
-import chalk from "npm:chalk@5.4.0";
+import chalk from "npm:chalk@5.4.1";
 import { getBorderCharacters, table, TableUserConfig } from "npm:table@6.9.0";
 
 export const formatterList = ["json", "table"] as const;
