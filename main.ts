@@ -1,6 +1,6 @@
 import { type FileContent, Github } from "@kesin11/gha-utils";
-import { fromPromise } from "npm:neverthrow@8.1.1";
-import type { Err, Ok } from "npm:neverthrow@8.1.1";
+import { fromPromise } from "npm:neverthrow@8.2.0";
+import type { Err, Ok } from "npm:neverthrow@8.2.0";
 import {
   createJobSummaries,
   createRunSummaries,
