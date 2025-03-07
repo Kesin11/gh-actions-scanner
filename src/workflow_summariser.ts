@@ -1,4 +1,4 @@
-import { max, median, min, quantile } from "npm:simple-statistics@7.8.7";
+import { max, median, min, quantile } from "npm:simple-statistics@7.8.8";
 import { JobModel, StepModel, WorkflowModel } from "@kesin11/gha-utils";
 import {
   WorkflowJobs,
