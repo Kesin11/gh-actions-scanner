@@ -1,7 +1,7 @@
 import { decodeBase64 } from "@std/encoding";
 import { chunk } from "@std/collections";
 import { Octokit, RestEndpointMethodTypes } from "npm:@octokit/rest@21.1.1";
-import { throttling } from "npm:@octokit/plugin-throttling@9.6.0";
+import { throttling } from "npm:@octokit/plugin-throttling@9.6.1";
 import { retry } from "npm:@octokit/plugin-retry@7.2.0";
 
 export type RepositoryResponse =
