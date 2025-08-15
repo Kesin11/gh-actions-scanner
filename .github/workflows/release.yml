@@ -47,7 +47,7 @@ jobs:
             core.setOutput('major', matched[3])
             core.setOutput('minor', matched[2])
             core.setOutput('patch', matched[1])
-      - uses: actions/checkout@08eba0b27e820071cde6df949e0beb9ba4906955 # v4.3.0
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
         with:
           ref: "${{ steps.release-drafter.outputs.tag_name }}"
       - name: Update major and minor git tags
