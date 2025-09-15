@@ -1,3 +1,5 @@
+// deno-lint-ignore-file no-import-prefix
+
 // ユーザーが用意するconfig fileのサンプル
 // 自作のruleの.tsをgithubで公開すればそれをimport可能
 
