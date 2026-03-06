@@ -28,8 +28,8 @@ describe("cache_active_size", () => {
 
     it("Cache size is over the threshold", async () => {
       const actionsCacheUsage = {
-        active_caches_size_in_bytes: (THRESHOLD_CACHE_SIZE_GB * 1024 * 1024 *
-          1024),
+        active_caches_size_in_bytes: THRESHOLD_CACHE_SIZE_GB * 1024 * 1024 *
+          1024,
       } as ActionsCacheUsage;
       const ruleResult =
         (await reportActiveCache({ actionsCacheUsage } as RuleArgs))[0];
