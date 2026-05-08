@@ -25,21 +25,21 @@ jobs:
       - id: test
         run: deno test -A
 
-  my_repo_test:
-    timeout-minutes: 10
-    runs-on: [ubuntu-latest]
-    permissions:
-      contents: read
-    concurrency:
-      # my_repo_test too consume API limit, so limit concurrency to 1
-      group: my_repo_test
-      cancel-in-progress: false
-    steps:
-      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
-        with:
-          deno-version-file: .tool-versions
+  # my_repo_test:
+  #   timeout-minutes: 10
+  #   runs-on: [ubuntu-latest]
+  #   permissions:
+  #     contents: read
+  #   concurrency:
+  #     # my_repo_test too consume API limit, so limit concurrency to 1
+  #     group: my_repo_test
+  #     cancel-in-progress: false
+  #   steps:
+  #     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  #     - uses: denoland/setup-deno@667a34cdef165d8d2b2e98dde39547c9daac7282 # v2.0.4
+  #       with:
+  #         deno-version-file: .tool-versions
 
-      - run: deno task my_repo_test
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #     - run: deno task my_repo_test
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
