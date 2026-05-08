@@ -10,7 +10,7 @@
   "imports": {
     "@cliffy/command": "jsr:@cliffy/command@^1.0.1",
     "@kesin11/gha-utils": "jsr:@kesin11/gha-utils@0.1.0",
-    "@std/assert": "jsr:@std/assert@^1.0.6",
+    "@std/assert": "jsr:@std/assert@^1.0.19",
     "@std/collections": "jsr:@std/collections@^1.0.8",
     "@std/encoding": "jsr:@std/encoding@^1.0.5",
     "@std/fs": "jsr:@std/fs@^1.0.4",
