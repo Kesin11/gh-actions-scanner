@@ -15,7 +15,6 @@
     "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/fmt@^1.0.9": "1.0.10",
     "jsr:@std/fs@^1.0.23": "1.0.23",
-    "jsr:@std/fs@^1.0.4": "1.0.23",
     "jsr:@std/internal@^1.0.12": "1.0.13",
     "jsr:@std/internal@^1.0.13": "1.0.13",
     "jsr:@std/path@^1.0.6": "1.1.4",
@@ -130,7 +129,7 @@
         "jsr:@std/assert",
         "jsr:@std/async",
         "jsr:@std/data-structures",
-        "jsr:@std/fs@^1.0.23",
+        "jsr:@std/fs",
         "jsr:@std/internal@^1.0.13",
         "jsr:@std/path@^1.1.4"
       ]
@@ -253,7 +252,6 @@
     "@octokit/plugin-retry@7.2.1_@octokit+core@6.1.6": {
       "integrity": "sha512-wUc3gv0D6vNHpGxSaR3FlqJpTXGWgqmk607N9L3LvPL4QjaxDgX/1nY2mGpT37Khn+nlIXdljczkRnNdTTV3/A==",
       "dependencies": [
-        "@octokit/core@6.1.6",
         "@octokit/request-error@6.1.8",
         "@octokit/types@14.1.0",
         "bottleneck"
@@ -522,7 +520,7 @@
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/collections@^1.1.7",
       "jsr:@std/encoding@^1.0.10",
-      "jsr:@std/fs@^1.0.4",
+      "jsr:@std/fs@^1.0.23",
       "jsr:@std/path@^1.0.6",
       "jsr:@std/testing@^1.0.18",
       "jsr:@std/yaml@^1.0.5",
