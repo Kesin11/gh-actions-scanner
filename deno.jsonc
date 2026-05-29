@@ -14,7 +14,7 @@
     "@std/collections": "jsr:@std/collections@^1.1.7",
     "@std/encoding": "jsr:@std/encoding@^1.0.10",
     "@std/fs": "jsr:@std/fs@^1.0.24",
-    "@std/path": "jsr:@std/path@^1.1.4",
+    "@std/path": "jsr:@std/path@^1.1.5",
     "@std/testing": "jsr:@std/testing@^1.0.18",
     "@std/yaml": "jsr:@std/yaml@^1.1.0",
     "neverthrow": "npm:neverthrow@8.2.0",

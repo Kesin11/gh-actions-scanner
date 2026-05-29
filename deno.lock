@@ -17,7 +17,6 @@
     "jsr:@std/fs@^1.0.24": "1.0.24",
     "jsr:@std/internal@^1.0.12": "1.0.14",
     "jsr:@std/internal@^1.0.14": "1.0.14",
-    "jsr:@std/path@^1.1.4": "1.1.5",
     "jsr:@std/path@^1.1.5": "1.1.5",
     "jsr:@std/semver@^1.0.8": "1.0.8",
     "jsr:@std/testing@^1.0.18": "1.0.19",
@@ -108,7 +107,7 @@
       "integrity": "f3061b45b81673a2bece689da041df32d174be064c89eb6397fb5718d3fb7877",
       "dependencies": [
         "jsr:@std/internal@^1.0.14",
-        "jsr:@std/path@^1.1.5"
+        "jsr:@std/path"
       ]
     },
     "@std/internal@1.0.14": {
@@ -131,7 +130,7 @@
         "jsr:@std/data-structures",
         "jsr:@std/fs",
         "jsr:@std/internal@^1.0.14",
-        "jsr:@std/path@^1.1.5"
+        "jsr:@std/path"
       ]
     },
     "@std/text@1.0.18": {
@@ -527,7 +526,7 @@
       "jsr:@std/collections@^1.1.7",
       "jsr:@std/encoding@^1.0.10",
       "jsr:@std/fs@^1.0.24",
-      "jsr:@std/path@^1.1.4",
+      "jsr:@std/path@^1.1.5",
       "jsr:@std/testing@^1.0.18",
       "jsr:@std/yaml@^1.1.0",
       "npm:@octokit/plugin-retry@8.1.0",
