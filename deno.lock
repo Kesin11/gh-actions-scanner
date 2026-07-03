@@ -8,11 +8,11 @@
     "jsr:@kesin11/gha-utils@0.1.0": "0.1.0",
     "jsr:@std/assert@^1.0.19": "1.0.19",
     "jsr:@std/async@^1.4.0": "1.4.0",
-    "jsr:@std/collections@^1.0.2": "1.2.0",
-    "jsr:@std/collections@^1.2.0": "1.2.0",
+    "jsr:@std/collections@^1.0.2": "1.3.0",
+    "jsr:@std/collections@^1.2.0": "1.3.0",
     "jsr:@std/data-structures@^1.1.0": "1.1.0",
-    "jsr:@std/encoding@1": "1.0.10",
-    "jsr:@std/encoding@^1.0.10": "1.0.10",
+    "jsr:@std/encoding@1": "1.0.11",
+    "jsr:@std/encoding@^1.0.11": "1.0.11",
     "jsr:@std/fmt@^1.0.10": "1.0.10",
     "jsr:@std/fs@^1.0.24": "1.0.24",
     "jsr:@std/internal@^1.0.12": "1.0.14",
@@ -91,14 +91,14 @@
     "@std/async@1.4.0": {
       "integrity": "4d70b008634f571cff9b554090d628c76141c32613aae0ff283fd5fa23d0c379"
     },
-    "@std/collections@1.2.0": {
-      "integrity": "47627a21d3a13138b77fd0e4d790ba9d2e603c3510b686cde6b132fe9aa98a88"
+    "@std/collections@1.3.0": {
+      "integrity": "eb36b43d784477ea0b476483ac034a14bdd182aff921c812ecf662a1fcef9498"
     },
     "@std/data-structures@1.1.0": {
       "integrity": "c35ae4ad5d8e41a38573c2fe3e19b18ea2505f63cfea201edcb8720aca1f7f58"
     },
-    "@std/encoding@1.0.10": {
-      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
+    "@std/encoding@1.0.11": {
+      "integrity": "e7cef2f0b3153bccc17431e7c864a1de03a4b6d9647389c43e08aaa775d37385"
     },
     "@std/fmt@1.0.10": {
       "integrity": "90dfba288802ac6de82fb31d0917eb9e4450b9925b954d5e51fc29ac07419db5"
@@ -282,6 +282,7 @@
     "@octokit/plugin-throttling@9.6.1_@octokit+core@7.0.6": {
       "integrity": "sha512-bt3EBUkeKUzDQXRCcFrR9SWVqlLFRRqcCrr6uAorWt6NXTyjMKqcGrFmXqJy9NCbnKgiIZ2OXWq04theFc76Jg==",
       "dependencies": [
+        "@octokit/core@7.0.6",
         "@octokit/types@13.10.0",
         "bottleneck"
       ]
@@ -523,7 +524,7 @@
       "jsr:@kesin11/gha-utils@0.1.0",
       "jsr:@std/assert@^1.0.19",
       "jsr:@std/collections@^1.2.0",
-      "jsr:@std/encoding@^1.0.10",
+      "jsr:@std/encoding@^1.0.11",
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/path@^1.1.5",
       "jsr:@std/testing@^1.0.19",
