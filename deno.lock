@@ -22,7 +22,7 @@
     "jsr:@std/semver@^1.0.8": "1.0.8",
     "jsr:@std/testing@^1.0.19": "1.0.19",
     "jsr:@std/text@^1.0.19": "1.0.19",
-    "jsr:@std/yaml@^1.1.1": "1.1.1",
+    "jsr:@std/yaml@^1.1.2": "1.1.2",
     "jsr:@std/yaml@~0.224.3": "0.224.3",
     "npm:@octokit/plugin-retry@8.1.0": "8.1.0_@octokit+core@7.0.6",
     "npm:@octokit/plugin-retry@^7.1.1": "7.2.1_@octokit+core@7.0.6",
@@ -140,8 +140,8 @@
     "@std/yaml@0.224.3": {
       "integrity": "9da1ed0094f42ba24570b4d88a094b44a793ac7f2bc085c1939d3ac7e11cc0bb"
     },
-    "@std/yaml@1.1.1": {
-      "integrity": "a57665ecf3d17b926380593a56625d8a10cc7281802f1e993b5ebc94a48e71f8"
+    "@std/yaml@1.1.2": {
+      "integrity": "de612653c036749ba2044165e316f52412b0f0698afffb7ee80b5331d6d2abae"
     }
   },
   "npm": {
@@ -528,7 +528,7 @@
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/path@^1.1.6",
       "jsr:@std/testing@^1.0.19",
-      "jsr:@std/yaml@^1.1.1",
+      "jsr:@std/yaml@^1.1.2",
       "npm:@octokit/plugin-retry@8.1.0",
       "npm:@octokit/plugin-throttling@11.0.3",
       "npm:@octokit/rest@22.0.1",
