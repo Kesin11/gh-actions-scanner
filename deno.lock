@@ -22,7 +22,7 @@
     "jsr:@std/semver@^1.0.8": "1.0.8",
     "jsr:@std/testing@^1.0.20": "1.0.20",
     "jsr:@std/text@^1.0.19": "1.0.19",
-    "jsr:@std/yaml@^1.1.2": "1.1.2",
+    "jsr:@std/yaml@^1.2.0": "1.2.0",
     "jsr:@std/yaml@~0.224.3": "0.224.3",
     "npm:@octokit/plugin-retry@8.1.1": "8.1.1_@octokit+core@7.0.7",
     "npm:@octokit/plugin-retry@^7.1.1": "7.2.1_@octokit+core@7.0.7",
@@ -140,8 +140,8 @@
     "@std/yaml@0.224.3": {
       "integrity": "9da1ed0094f42ba24570b4d88a094b44a793ac7f2bc085c1939d3ac7e11cc0bb"
     },
-    "@std/yaml@1.1.2": {
-      "integrity": "de612653c036749ba2044165e316f52412b0f0698afffb7ee80b5331d6d2abae"
+    "@std/yaml@1.2.0": {
+      "integrity": "20beb41e4983ba3437dbefac62b14061ab058e8a187596f19d28ff9035f6e6cf"
     }
   },
   "npm": {
@@ -286,7 +286,6 @@
     "@octokit/plugin-throttling@9.6.1_@octokit+core@7.0.7": {
       "integrity": "sha512-bt3EBUkeKUzDQXRCcFrR9SWVqlLFRRqcCrr6uAorWt6NXTyjMKqcGrFmXqJy9NCbnKgiIZ2OXWq04theFc76Jg==",
       "dependencies": [
-        "@octokit/core@7.0.7",
         "@octokit/types@13.10.0",
         "bottleneck"
       ]
@@ -538,7 +537,7 @@
       "jsr:@std/fs@^1.0.24",
       "jsr:@std/path@^1.1.6",
       "jsr:@std/testing@^1.0.20",
-      "jsr:@std/yaml@^1.1.2",
+      "jsr:@std/yaml@^1.2.0",
       "npm:@octokit/plugin-retry@8.1.1",
       "npm:@octokit/plugin-throttling@11.0.5",
       "npm:@octokit/rest@22.0.1",
