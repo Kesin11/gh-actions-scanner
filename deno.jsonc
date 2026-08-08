@@ -22,7 +22,7 @@
     "table": "npm:table@6.9.0",
     "simple-statistics": "npm:simple-statistics@7.8.8",
     "@octokit/rest": "npm:@octokit/rest@22.0.1",
-    "@octokit/plugin-throttling": "npm:@octokit/plugin-throttling@11.0.3",
-    "@octokit/plugin-retry": "npm:@octokit/plugin-retry@8.1.0"
+    "@octokit/plugin-throttling": "npm:@octokit/plugin-throttling@11.0.5",
+    "@octokit/plugin-retry": "npm:@octokit/plugin-retry@8.1.1"
   }
 }
